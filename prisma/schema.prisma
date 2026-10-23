@@ -1,0 +1,113 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+enum Role {
+  ADMIN
+  GURU
+  KEPALA_SEKOLAH
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  role         Role     @default(ADMIN)
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Siswa {
+  id              String   @id @default(uuid())
+  nis             String   @unique
+  nisn            String?  @unique
+  nik             String?  @unique
+  nama            String
+  tempatLahir     String?
+  tanggalLahir    DateTime? @db.Date
+  tingkatRombel   String   @map("kelas")
+  umur            Int?
+  jenisKelamin    String   @map("jk")
+  status          String   @default("Aktif")
+  alamat          String?  @db.Text
+  kebutuhanKhusus String?  @db.Text
+  disabilitas     String?  @db.Text
+  ayahKandung     String?
+  ibuKandung      String?
+  wali            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  keuangan        Keuangan[]
+  absensi         Absensi[]
+  raport          Raport[]
+  nilaiHarian NilaiHarian[]
+}
+
+model Guru {
+  id       String @id @default(uuid())
+  nip      String @unique
+  nama     String
+  jabatan  String
+  status   String @default("Aktif")
+}
+
+model Keuangan {
+  id          String   @id @default(uuid())
+  nis         String
+  nama        String
+  kelas       String
+  jenis       String   
+  keterangan  String?
+  jumlah      Float
+  status      String   
+  tanggal     String
+  createdAt   DateTime @default(now())
+  siswa       Siswa    @relation(fields: [nis], references: [nis], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Absensi {
+  id         String   @id @default(uuid())
+  nis        String
+  nama       String
+  tanggal    String
+  status     String
+  keterangan String?
+  siswa      Siswa   @relation(fields: [nis], references: [nis], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([nis, tanggal])
+}
+
+model Raport {
+  id         String  @id @default(uuid())
+  nis        String
+  semester   String
+  aspek      String
+  nilaiAngka Float?
+  predikat   String?
+  catatan    String
+  siswa      Siswa   @relation(fields: [nis], references: [nis], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([nis, semester])
+}
+
+model NilaiHarian {
+  id         String   @id @default(uuid())
+  nis        String
+  tanggal    String
+  aspek      String
+  nilaiAngka Float
+  predikat   String
+  catatan    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  siswa      Siswa    @relation(fields: [nis], references: [nis], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([nis, tanggal, aspek])
+}
