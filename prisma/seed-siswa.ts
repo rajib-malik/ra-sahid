@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 import * as XLSX from "xlsx";
 
 const WORKBOOK_NAME = "RA MODERN SAHID - KELOMPOK A TP. 2026-2027.xlsx";

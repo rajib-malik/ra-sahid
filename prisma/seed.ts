@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import bcrypt from "bcryptjs";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 async function main() {
   if (process.env.NODE_ENV === "production") {
