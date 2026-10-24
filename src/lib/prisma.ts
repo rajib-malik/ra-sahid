@@ -1,37 +1,32 @@
-import "server-only";
+import { PrismaClient } from "@prisma/client";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import ws from "ws";
 
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { PrismaClient } from "@/generated/prisma/client";
+neonConfig.webSocketConstructor = ws;
 
-function createPrismaClient() {
-  const databaseUrl = process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL;
 
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL belum diatur. Periksa berkas .env lokal.");
-  }
-
-  const url = new URL(databaseUrl);
-  if (url.protocol !== "mysql:" || !url.hostname || !url.pathname.slice(1)) {
-    throw new Error("DATABASE_URL harus menggunakan URL MySQL yang valid.");
-  }
-
-  const adapter = new PrismaMariaDb({
-    host: url.hostname,
-    port: Number(url.port || 3306),
-    user: decodeURIComponent(url.username),
-    password: decodeURIComponent(url.password),
-    database: decodeURIComponent(url.pathname.slice(1)),
-    connectionLimit: 5,
-  });
-  return new PrismaClient({ adapter });
+if (!connectionString) {
+  throw new Error("DATABASE_URL belum diatur di dalam environment variables.");
 }
 
-const globalForPrisma = globalThis as typeof globalThis & {
-  prisma?: PrismaClient;
-};
-
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+// Validasi protokol URL PostgreSQL
+try {
+  const url = new URL(connectionString);
+  if (url.protocol !== "postgresql:" && url.protocol !== "postgres:") {
+    throw new Error("DATABASE_URL harus menggunakan URL PostgreSQL yang valid.");
+  }
+} catch (e) {
+  throw new Error("Format DATABASE_URL tidak valid: " + (e instanceof Error ? e.message : String(e)));
 }
+
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+
+// Inisialisasi pool dan adapter Prisma Neon yang kompatibel
+const pool = new Pool({ connectionString });
+const adapter = new PrismaNeon(pool as any);
+
+export const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
