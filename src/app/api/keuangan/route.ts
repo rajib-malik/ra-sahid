@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@prisma/client";
 import { authorizeApiRequest, isSameOriginRequest } from "@/lib/auth/api-authorization";
 import { PERMISSIONS } from "@/lib/auth/authorization";
 import { prisma } from "@/lib/prisma";
