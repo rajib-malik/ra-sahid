@@ -6,7 +6,6 @@ import bcrypt from "bcryptjs";
 
 neonConfig.webSocketConstructor = ws;
 
-// Masukkan connection string Neon secara langsung agar tidak perlu membaca .env
 const connectionString = "postgresql://neondb_owner:npg_Y1axWlUF5QJL@ep-soft-boat-b5heolmf-pooler.c-7.us-east-2.aws.neon.tech:6543/neondb?sslmode=require&pgbouncer=true";
 
 const pool = new Pool({ connectionString });
@@ -18,45 +17,49 @@ async function main() {
   
   const hashedPassword = await bcrypt.hash("password", 10);
 
-  // 1. Akun Admin
+  // 1. Akun Admin (Pastikan isActive: true)
   const admin = await prisma.user.upsert({
     where: { email: "admin@rasahid.com" },
     update: {
       passwordHash: hashedPassword,
       name: "Administrator",
       role: "ADMIN",
+      isActive: true,
     },
     create: {
       email: "admin@rasahid.com",
       name: "Administrator",
       passwordHash: hashedPassword,
       role: "ADMIN",
+      isActive: true,
     },
   });
-  console.log("✔ Akun Admin berhasil disiapkan:", admin.email);
+  console.log("✔ Akun Admin berhasil diaktifkan:", admin.email);
 
-  // 2. Akun Kepala Sekolah
+  // 2. Akun Kepala Sekolah (Pastikan isActive: true)
   const kepalaSekolah = await prisma.user.upsert({
     where: { email: "kepalasekolah@rasahid.com" },
     update: {
       passwordHash: hashedPassword,
       name: "Kepala Sekolah",
       role: "KEPALA_SEKOLAH",
+      isActive: true,
     },
     create: {
       email: "kepalasekolah@rasahid.com",
       name: "Kepala Sekolah",
       passwordHash: hashedPassword,
       role: "KEPALA_SEKOLAH",
+      isActive: true,
     },
   });
-  console.log("✔ Akun Kepala Sekolah berhasil disiapkan:", kepalaSekolah.email);
-  console.log("Selesai! Kedua akun sekarang menggunakan password: password");
+  console.log("✔ Akun Kepala Sekolah berhasil diaktifkan:", kepalaSekolah.email);
+  console.log("Selesai! Kedua akun kini aktif dan menggunakan password: password");
 }
 
 main()
   .catch((e) => {
-    console.error("Gagal membuat akun:", e);
+    console.error("Gagal memperbarui akun:", e);
     process.exit(1);
   })
   .finally(async () => {
