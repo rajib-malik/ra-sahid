@@ -1,8 +1,20 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
+import { neonConfig } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import ws from "ws";
 import * as xlsx from "xlsx";
 import path from "path";
 
-const prisma = new PrismaClient();
+// Inisialisasi adapter Neon khusus untuk skrip impor
+neonConfig.webSocketConstructor = ws;
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL belum diatur di dalam file .env");
+}
+
+const adapter = new PrismaNeon({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
 // Tentukan lokasi file Excel Anda
 const EXCEL_FILES = ["data/Kelas_A.xlsx", "data/Kelas_B.xlsx"];
