@@ -1,35 +1,56 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Database lokal (pengembangan)
+## Database
 
-Proyek ini menggunakan Prisma ORM 7 dengan MySQL lokal dari XAMPP. Buat
-database `ra_sahid_db` di phpMyAdmin, lalu atur `DATABASE_URL` di `.env`
-(contoh bawaan memakai `root` tanpa kata sandi). Berkas `.env` diabaikan oleh
-Git. Salin `.env.example` ke `.env` jika menyiapkan workspace baru:
+Aplikasi menggunakan Prisma ORM 7 dan PostgreSQL Neon. Prisma CLI membaca
+`DATABASE_URL` melalui `prisma.config.ts`, sedangkan aplikasi memakai adapter
+Neon di `src/lib/prisma.ts`. Atur variabel tersebut di `.env` pada root proyek
+untuk penggunaan lokal dan di Environment Variables Vercel untuk deployment;
+jangan membagikan nilainya. Untuk aplikasi serverless, gunakan endpoint Neon
+pooler. Operasi migrasi umumnya memerlukan URL direct.
 
-```powershell
-Copy-Item .env.example .env
-```
-
-Perintah database:
-
-```powershell
-npm run db:generate
-npx prisma db push
-```
-
-`db push` menyelaraskan skema Prisma dengan database MySQL. Riwayat migrasi
-SQLite lama di `prisma/migrations` bukan untuk dijalankan terhadap database
-MySQL ini. Prisma Client hasil generate berada di `src/generated/prisma/` dan
-tidak disimpan di Git. Jangan menaruh kata sandi atau rahasia di model maupun
-`.env` yang dibagikan.
+Perhatian: `prisma/migrations/migration_lock.toml` masih mencatat provider
+SQLite, sementara datasource saat ini PostgreSQL. Jangan jalankan migrasi atau
+`db push` terhadap Neon sebelum riwayat migrasi dan skema database ditinjau
+serta direkonsiliasi. Impor Excel di bawah tidak mengubah skema maupun
+menjalankan migrasi.
 
 Model `Siswa` menyimpan identitas, tempat/tanggal lahir, tingkat-rombel, umur,
 jenis kelamin, status, alamat, kebutuhan khusus/disabilitas, dan data orang
 tua/wali. Field tambahan bersifat nullable agar data siswa lama tetap berlaku.
 `tingkatRombel` dan `jenisKelamin` dipetakan ke kolom lama `kelas` dan `jk`;
-jalankan `npm run db:generate` lalu `npx prisma db push` setelah mengambil
-cadangan database sebelum menerapkan perubahan skema.
+schema mendefinisikan `umur` sebagai integer opsional dan tidak memiliki field
+nomor telepon atau KIP/PIP.
+
+## Impor siswa dari Excel
+
+Impor membaca workbook Kelompok A dan B di `prisma/data`. Periksa data dan
+identifier yang sudah ada di Neon tanpa mengubah database:
+
+```powershell
+npm run import:siswa:check
+```
+
+Jika laporan tidak berisi baris yang perlu diperbaiki, duplikasi sumber, atau
+konflik identitas, jalankan:
+
+```powershell
+npm run import:siswa
+```
+
+Sebelum menulis, perintah ini menampilkan target Neon (tanpa kredensial) dan
+jumlah data baru, lalu meminta konfirmasi dengan mengetik nama database dan
+host secara persis. Hanya data baru yang dimasukkan dalam satu transaksi;
+data lama tidak diperbarui. Pastikan `DATABASE_URL` di `.env` menunjuk ke
+database yang benar. Sheet `Tidak Aktif` dikecualikan mengikuti aturan impor
+lama. Workbook tidak memiliki kolom NIS, sehingga NIS dipetakan ke NISN jika
+tersedia, lalu ke NIK sebagai fallback—aturan yang sama seperti seed lama.
+NIK/NISN yang tidak sesuai format ditandai untuk diperbaiki, bukan diubah
+otomatis. Nilai umur dengan tahun dan bulan tidak dibulatkan karena skema
+hanya menyediakan `umur Int?`; umur dibiarkan kosong dan tanggal lahir sumber
+tetap disimpan. Kolom sumber yang tidak memiliki field model (misalnya nomor
+telepon atau KIP/PIP) akan memblokir baris jika berisi nilai, bukan dibuang
+diam-diam.
 
 Untuk membuat akun awal lokal, jalankan `npm run db:seed` dengan variabel
 `RA_SAHID_SEED_PASSWORD` diatur ke kata sandi yang diinginkan. Kata sandi

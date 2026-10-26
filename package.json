@@ -11,6 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:status": "prisma migrate status",
     "db:seed": "prisma db seed",
+    "import:siswa:check": "tsx prisma/import-siswa.ts --check",
+    "import:siswa": "tsx prisma/import-siswa.ts",
     "user:create": "node scripts/create-user.mjs",
     "test:auth": "node --experimental-strip-types --test tests/auth-authorization.test.mjs"
   },
