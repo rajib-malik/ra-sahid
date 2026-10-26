@@ -17,7 +17,10 @@ const adapter = new PrismaNeon({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 // Tentukan lokasi file Excel Anda
-const EXCEL_FILES = ["data/Kelas_A.xlsx", "data/Kelas_B.xlsx"];
+const EXCEL_FILES = [
+  "prisma/data/RA MODERN SAHID - KELOMPOK A TP. 2026-2027.xlsx",
+  "prisma/data/RA MODERN SAHID - KELOMPOK B TP. 2026-2027.xlsx"
+];
 
 async function main() {
   for (const file of EXCEL_FILES) {
