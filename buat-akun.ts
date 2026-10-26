@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
@@ -6,7 +7,11 @@ import bcrypt from "bcryptjs";
 
 neonConfig.webSocketConstructor = ws;
 
-const connectionString = "postgresql://neondb_owner:npg_Y1axWlUF5QJL@ep-soft-boat-b5heolmf-pooler.c-7.us-east-2.aws.neon.tech:6543/neondb?sslmode=require&pgbouncer=true";
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL tidak ditemukan di file .env!");
+}
 
 const pool = new Pool({ connectionString });
 const adapter = new PrismaNeon(pool as any);
@@ -17,7 +22,7 @@ async function main() {
   
   const hashedPassword = await bcrypt.hash("password", 10);
 
-  // 1. Akun Admin (Pastikan isActive: true)
+  // 1. Akun Admin
   const admin = await prisma.user.upsert({
     where: { email: "admin@rasahid.com" },
     update: {
@@ -34,9 +39,9 @@ async function main() {
       isActive: true,
     },
   });
-  console.log("✔ Akun Admin berhasil diaktifkan:", admin.email);
+  console.log("✔ Akun Admin berhasil disiapkan/diaktifkan:", admin.email);
 
-  // 2. Akun Kepala Sekolah (Pastikan isActive: true)
+  // 2. Akun Kepala Sekolah
   const kepalaSekolah = await prisma.user.upsert({
     where: { email: "kepalasekolah@rasahid.com" },
     update: {
@@ -53,8 +58,8 @@ async function main() {
       isActive: true,
     },
   });
-  console.log("✔ Akun Kepala Sekolah berhasil diaktifkan:", kepalaSekolah.email);
-  console.log("Selesai! Kedua akun kini aktif dan menggunakan password: password");
+  console.log("✔ Akun Kepala Sekolah berhasil disiapkan/diaktifkan:", kepalaSekolah.email);
+  console.log("Selesai! Kedua akun kini aktif dengan password: password");
 }
 
 main()
