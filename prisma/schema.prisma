@@ -32,6 +32,8 @@ model Siswa {
   tempatLahir     String?
   tanggalLahir    DateTime? @db.Date
   tingkatRombel   String   @map("kelas")
+  kelompok        String?
+  tahunAjaran     String?
   umur            Int?
   jenisKelamin    String   @map("jk")
   status          String   @default("Aktif")
