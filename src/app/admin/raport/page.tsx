@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, FileText, Printer, GraduationCap, CalendarDays, BookOpen, UserRound, Award } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 
 type Student = {
@@ -179,21 +179,45 @@ export default function RaportResmiPage() {
 
   return (
     <div className="space-y-6">
-      <div className="non-printable flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">E-Raport Resmi Madrasah</h1>
-          <p className="text-sm text-slate-500">Rekap nilai dihitung otomatis dari data Nilai Harian siswa.</p>
+      <div className="non-printable relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50 p-5 shadow-sm sm:p-6">
+        <div className="absolute -right-10 -top-12 h-44 w-44 rounded-full bg-emerald-100/70 blur-3xl" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-lg shadow-emerald-900/15">
+              <GraduationCap className="h-7 w-7" />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Akademik • Laporan Hasil Belajar</p>
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">E-Raport Resmi Madrasah</h1>
+              <p className="mt-1 max-w-xl text-sm text-slate-500">Lihat rekap perkembangan dan hasil penilaian harian peserta didik.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+          >
+            <Printer className="h-4 w-4" />
+            Cetak / Download PDF
+          </button>
         </div>
-        <button type="button" onClick={() => window.print()} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white">
-          Cetak / Download PDF
-        </button>
       </div>
 
       {pesanError && <p role="alert" className="non-printable rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{pesanError}</p>}
 
-      <div className="non-printable grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3">
+      <section className="non-printable rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Pengaturan Raport</h2>
+            <p className="mt-0.5 text-xs text-slate-500">Pilih peserta didik dan periode raport yang ingin ditampilkan.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div>
-          <label htmlFor="cari-siswa-raport" className="block text-xs font-semibold text-slate-700">Cari Siswa</label>
+          <label htmlFor="cari-siswa-raport" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"><Search className="h-3.5 w-3.5 text-slate-400" /> Cari Siswa</label>
           <div className="relative mt-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -202,7 +226,7 @@ export default function RaportResmiPage() {
               value={cariSiswa}
               onChange={(event) => setCariSiswa(event.target.value)}
               placeholder="Cari nama, NIS, atau kelas..."
-              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              className="h-11 w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50"
             />
             {cariSiswa && (
               <button
@@ -238,33 +262,44 @@ export default function RaportResmiPage() {
           )}
         </div>
         <div>
-          <label htmlFor="semester-raport" className="block text-xs font-semibold text-slate-700">Periode Semester</label>
-          <select id="semester-raport" value={semester} onChange={(event) => setSemester(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm">
+          <label htmlFor="semester-raport" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"><BookOpen className="h-3.5 w-3.5 text-slate-400" /> Periode Semester</label>
+          <select id="semester-raport" value={semester} onChange={(event) => setSemester(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50">
             <option>Semester 1 (Ganjil)</option>
             <option>Semester 2 (Genap)</option>
           </select>
         </div>
         <div>
-          <label htmlFor="tahun-ajaran-raport" className="block text-xs font-semibold text-slate-700">Tahun Ajaran (YYYY/YYYY)</label>
-          <input id="tahun-ajaran-raport" value={tahunAjaran} onChange={(event) => setTahunAjaran(event.target.value)} pattern="\d{4}/\d{4}" maxLength={9} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm" />
+          <label htmlFor="tahun-ajaran-raport" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"><CalendarDays className="h-3.5 w-3.5 text-slate-400" /> Tahun Ajaran (YYYY/YYYY)</label>
+          <input id="tahun-ajaran-raport" value={tahunAjaran} onChange={(event) => setTahunAjaran(event.target.value)} pattern="\d{4}/\d{4}" maxLength={9} placeholder="2026/2027" className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50" />
         </div>
-      </div>
+        </div>
+      </section>
 
-      <div id="area-raport" className="space-y-6 rounded-2xl border border-slate-300 bg-white p-8 text-slate-900 shadow-sm">
-        <div className="space-y-1 border-b-2 border-slate-900 pb-4 text-center">
-          <p className="text-xs font-bold tracking-widest text-slate-600">KEMENTERIAN AGAMA REPUBLIK INDONESIA</p>
-          <h2 className="text-xl font-extrabold">RAUDHATUL ATHFAL (RA) SAHID</h2>
-          <p className="text-xs text-slate-600">Laporan Penilaian Perkembangan Anak Didik</p>
+      <div id="area-raport" className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm sm:p-8">
+        <div className="relative overflow-hidden rounded-xl border-b-4 border-double border-emerald-800 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 px-4 py-6 text-center sm:px-8">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-100 bg-white text-emerald-800 shadow-sm">
+            <GraduationCap className="h-8 w-8" />
+          </div>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-emerald-800 sm:text-xs">KEMENTERIAN AGAMA REPUBLIK INDONESIA</p>
+          <h2 className="mt-2 text-xl font-extrabold tracking-wide text-slate-900 sm:text-2xl">RAUDHATUL ATHFAL (RA) SAHID</h2>
+          <p className="mt-1 text-xs font-medium text-slate-600 sm:text-sm">Laporan Penilaian Perkembangan Anak Didik</p>
+          <div className="mx-auto mt-4 h-1 w-20 rounded-full bg-emerald-700" />
         </div>
-        <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-          <p><span className="font-semibold text-slate-500">Nama Anak:</span> {siswaTerpilih?.nama ?? "-"}</p>
-          <p><span className="font-semibold text-slate-500">Kelompok:</span> {siswaTerpilih?.kelas ?? "-"}</p>
-          <p><span className="font-semibold text-slate-500">NIS:</span> {siswaTerpilih?.nis ?? "-"}</p>
-          <p><span className="font-semibold text-slate-500">Semester:</span> {semester} ({tahunAjaran})</p>
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 text-sm sm:grid-cols-2 sm:p-5">
+          <p className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Anak</span><span className="font-bold text-slate-900">{siswaTerpilih?.nama ?? "-"}</span></p>
+          <p className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kelompok</span><span className="font-bold text-slate-900">{siswaTerpilih?.kelas ?? "-"}</span></p>
+          <p className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">NIS</span><span className="font-bold text-slate-900">{siswaTerpilih?.nis ?? "-"}</span></p>
+          <p className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Semester / Tahun Ajaran</span><span className="font-bold text-slate-900">{semester} ({tahunAjaran})</span></p>
         </div>
-        <div className="space-y-2">
-          <h3 className="text-sm font-bold uppercase text-slate-700">Rekapitulasi Nilai Harian per Mata Pelajaran</h3>
-          <div className="overflow-x-auto rounded-xl border border-slate-300">
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><Award className="h-4 w-4" /></div>
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-800">Rekapitulasi Nilai Harian</h3>
+              <p className="mt-0.5 text-xs text-slate-500">Ringkasan penilaian berdasarkan mata pelajaran atau aspek pembelajaran.</p>
+            </div>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-100 font-bold">
                 <tr>
