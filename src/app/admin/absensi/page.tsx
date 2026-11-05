@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Search, X } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 
 type Student = {
@@ -110,6 +111,7 @@ export default function AbsensiPage() {
   const [pilihKelas, setPilihKelas] = useState("Semua");
   const [pesanSimpan, setPesanSimpan] = useState("");
   const [pesanError, setPesanError] = useState("");
+  const [cariSiswa, setCariSiswa] = useState("");
   const [memuat, setMemuat] = useState(true);
   const [menyimpan, setMenyimpan] = useState(false);
   const requestId = useRef(0);
@@ -182,9 +184,15 @@ export default function AbsensiPage() {
   const siswaBelumDiabsen = daftarSiswa.filter((student) => !recordedNis.has(student.nis));
   const siswaDipilih = siswaBelumDiabsen.find((student) => student.nis === nisDipilih);
   const daftarKelas = [...new Set(daftarSiswa.map((student) => student.kelas))].sort();
-  const absensiDisaring = daftarAbsensi.filter(
-    (record) => pilihKelas === "Semua" || record.kelas === pilihKelas,
-  );
+  const absensiDisaring = daftarAbsensi.filter((record) => {
+    const keyword = cariSiswa.trim().toLowerCase();
+    const cocokPencarian =
+      record.nama.toLowerCase().includes(keyword) ||
+      record.nis.toLowerCase().includes(keyword);
+    const cocokKelas = pilihKelas === "Semua" || record.kelas === pilihKelas;
+
+    return cocokPencarian && cocokKelas;
+  });
 
   async function handleSimpan(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -312,6 +320,62 @@ export default function AbsensiPage() {
         </div>
       </form>
 
+      {/* Pencarian riwayat absensi */}
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">Riwayat Absensi</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Cari berdasarkan nama atau NIS siswa.
+            </p>
+          </div>
+
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={cariSiswa}
+              onChange={(event) => setCariSiswa(event.target.value)}
+              placeholder="Cari nama atau NIS siswa..."
+              aria-label="Cari nama atau NIS pada riwayat absensi"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+            />
+            {cariSiswa && (
+              <button
+                type="button"
+                onClick={() => setCariSiswa("")}
+                aria-label="Hapus pencarian"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-rose-500"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-slate-500">
+            Menampilkan{" "}
+            <span className="font-semibold text-emerald-700">
+              {memuat ? 0 : absensiDisaring.length}
+            </span>{" "}
+            dari {daftarAbsensi.length} data absensi
+          </p>
+          {(cariSiswa || pilihKelas !== "Semua") && (
+            <button
+              type="button"
+              onClick={() => {
+                setCariSiswa("");
+                setPilihKelas("Semua");
+              }}
+              className="text-xs font-semibold text-rose-600 transition hover:text-rose-700"
+            >
+              Reset Filter
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -336,7 +400,33 @@ export default function AbsensiPage() {
                   <td className="px-6 py-4">{record.keterangan || "-"}</td>
                 </tr>
               )) : (
-                <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-400">Belum ada absensi untuk tanggal ini.</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="h-7 w-7 text-slate-300" />
+                      <p className="font-medium text-slate-600">
+                        {daftarAbsensi.length === 0
+                          ? "Belum ada absensi untuk tanggal ini."
+                          : "Data absensi tidak ditemukan."}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        Coba ubah kata kunci pencarian atau filter kelas.
+                      </p>
+                      {(cariSiswa || pilihKelas !== "Semua") && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCariSiswa("");
+                            setPilihKelas("Semua");
+                          }}
+                          className="mt-1 text-sm font-semibold text-emerald-600 hover:text-emerald-700"
+                        >
+                          Tampilkan Semua Data
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
