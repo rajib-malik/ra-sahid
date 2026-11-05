@@ -21,68 +21,89 @@ async function main() {
     const fileA = path.join(__dirname, 'data', 'RA MODERN SAHID - KELOMPOK A TP. 2026-2027.xlsx');
     const fileB = path.join(__dirname, 'data', 'RA MODERN SAHID - KELOMPOK B TP. 2026-2027.xlsx');
 
-    const readExcel = (filePath) => {
+    // Fungsi helper untuk membaca SEMUA sheet dari sebuah file Excel
+    const readAllSheetsFromExcel = (filePath, defaultKelompok) => {
       const workbook = XLSX.readFile(filePath);
-      const sheetName = workbook.SheetNames[0];
-      return XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+      let allRows = [];
+
+      workbook.SheetNames.forEach((sheetName) => {
+        console.log(`   📄 Membaca sheet: "${sheetName}"`);
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+        
+        // Menandai kelompok berdasarkan nama sheet atau parameter default
+        rows.forEach((row) => {
+          row._targetKelompok = defaultKelompok;
+          // Opsional: jika nama sheet mengandung huruf B atau A, bisa dideteksi otomatis di sini jika perlu
+        });
+
+        allRows = allRows.concat(rows);
+      });
+
+      return allRows;
     };
 
-    console.log('Membaca file Excel Kelompok A & B...');
-    const dataA = readExcel(fileA);
-    const dataB = readExcel(fileB);
+    console.log('📂 Membaca semua sheet dari file Excel Kelompok A...');
+    const dataKelompokA = readAllSheetsFromExcel(fileA, 'A');
 
-    console.log(`Ditemukan ${dataA.length} data di Kelompok A dan ${dataB.length} data di Kelompok B.`);
+    console.log('📂 Membaca semua sheet dari file Excel Kelompok B...');
+    const dataKelompokB = readAllSheetsFromExcel(fileB, 'B');
 
-    console.log('Mengimpor data Kelompok A...');
-    for (const row of dataA) {
-      try {
-        await prisma.siswa.create({
-          data: {
-            nama: row['Nama Lengkap'] || '',
-            nis: String(row['NISN'] || row['NIK'] || ''),
-            nik: String(row['NIK'] || ''),
+    console.log(`✨ Total keseluruhan ditemukan ${dataKelompokA.length} data di Kelompok A dan ${dataKelompokB.length} data di Kelompok B.`);
+
+    // Fungsi proses insert/update ke database
+    const processRows = async (rows, kelompokLabel) => {
+      for (const row of rows) {
+        try {
+          const nisValue = String(row['NISN'] || row['NIK'] || '').replace(/'/g, '');
+          const nikValue = String(row['NIK'] || '').replace(/'/g, '');
+          const nisnValue = String(row['NISN'] || '').replace(/'/g, '');
+          
+          if (!nisValue) continue;
+
+          const dataPayload = {
+            nama: row['Nama Lengkap'] || row['Nama'] || '',
+            nik: nikValue,
+            nisn: nisnValue !== '' ? nisnValue : null,
             tempatLahir: row['Tempat Lahir'] || '',
             tanggalLahir: row['Tanggal Lahir'] ? new Date(row['Tanggal Lahir']) : null,
             jenisKelamin: row['Jenis Kelamin'] || '',
             alamat: row['Alamat'] || '',
-            noTelepon: String(row['No Telepon'] || ''),
-            namaAyah: row['Nama Ayah Kandung'] || '',
-            namaIbu: row['Nama Ibu Kandung'] || '',
-            kelompok: 'A',
+            status: row['Status'] || 'Aktif',
+            kebutuhanKhusus: row['Kebutuhan Khusus'] || null,
+            disabilitas: row['Disabilitas'] || null,
+            ayahKandung: row['Nama Ayah Kandung'] || '',
+            ibuKandung: row['Nama Ibu Kandung'] || '',
+            wali: row['Nama Wali'] || null,
+            tingkatRombel: String(row['Tingkat - Rombel'] || sheetName || ''),
+            kelompok: kelompokLabel,
             tahunAjaran: '2026-2027',
-          },
-        });
-      } catch (err) {
-        console.warn(`Gagal insert baris ${row['Nama Lengkap']}:`, err.message);
-      }
-    }
-    console.log('✅ Selesai memproses Kelompok A.');
+          };
 
-    console.log('Mengimpor data Kelompok B...');
-    for (const row of dataB) {
-      try {
-        await prisma.siswa.create({
-          data: {
-            nama: row['Nama Lengkap'] || '',
-            nis: String(row['NISN'] || row['NIK'] || ''),
-            nik: String(row['NIK'] || ''),
-            tempatLahir: row['Tempat Lahir'] || '',
-            tanggalLahir: row['Tanggal Lahir'] ? new Date(row['Tanggal Lahir']) : null,
-            jenisKelamin: row['Jenis Kelamin'] || '',
-            alamat: row['Alamat'] || '',
-            noTelepon: String(row['No Telepon'] || ''),
-            namaAyah: row['Nama Ayah Kandung'] || '',
-            namaIbu: row['Nama Ibu Kandung'] || '',
-            kelompok: 'B',
-            tahunAjaran: '2026-2027',
-          },
-        });
-      } catch (err) {
-        console.warn(`Gagal insert baris ${row['Nama Lengkap']}:`, err.message);
+          await prisma.siswa.upsert({
+            where: { nis: nisValue },
+            update: dataPayload,
+            create: {
+              nis: nisValue,
+              ...dataPayload,
+            },
+          });
+        } catch (err) {
+          console.warn(`⚠️ Gagal insert/update baris ${row['Nama Lengkap'] || row['Nama']}:`, err.message);
+        }
       }
-    }
-    console.log('✅ Selesai memproses Kelompok B.');
+    };
 
+    console.log('🚀 Mengimpor seluruh data Kelompok A ke database...');
+    await processRows(dataKelompokA, 'A');
+    console.log('✅ Selesai memproses semua sheet Kelompok A.');
+
+    console.log('🚀 Mengimpor seluruh data Kelompok B ke database...');
+    await processRows(dataKelompokB, 'B');
+    console.log('✅ Selesai memproses semua sheet Kelompok B.');
+
+    console.log('🎉 🎉 SEMUA DATA DARI SEMUA SHEET BERHASIL DIIMPOR!');
+    
   } catch (error) {
     console.error('❌ Gagal menjalankan skrip:', error);
   } finally {

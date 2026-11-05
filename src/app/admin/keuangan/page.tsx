@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Search, X } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 
 type Keuangan = {
@@ -271,8 +272,11 @@ export default function KeuanganPage() {
     if (tabAktif === "lunas" && item.status !== "Lunas") return false;
     if (tabAktif === "belum-lunas" && item.status !== "Belum Lunas") return false;
 
-    const cocokNama = item.nama.toLowerCase().includes(cariNama.toLowerCase());
-    const cocokAbjad = filterAbjad === "" || item.nama.toUpperCase().startsWith(filterAbjad);
+    const kataKunci = cariNama.trim().toLocaleLowerCase("id-ID");
+    const cocokNama = item.nama.toLocaleLowerCase("id-ID").includes(kataKunci);
+    const cocokAbjad =
+      filterAbjad === "" ||
+      item.nama.trim().toLocaleUpperCase("id-ID").startsWith(filterAbjad);
 
     return cocokNama && cocokAbjad;
   });
@@ -307,33 +311,106 @@ export default function KeuanganPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex rounded-lg bg-slate-100 p-1 text-xs font-semibold text-slate-600">
-          <button onClick={() => setTabAktif("semua")} className={`rounded-md px-4 py-2 ${tabAktif === "semua" ? "bg-white text-slate-900 shadow-sm" : ""}`}>Semua</button>
-          <button onClick={() => setTabAktif("lunas")} className={`rounded-md px-4 py-2 ${tabAktif === "lunas" ? "bg-white text-emerald-700 shadow-sm" : ""}`}>Lunas</button>
-          <button onClick={() => setTabAktif("belum-lunas")} className={`rounded-md px-4 py-2 ${tabAktif === "belum-lunas" ? "bg-white text-amber-700 shadow-sm" : ""}`}>Belum Lunas</button>
-        </div>
+      {/* Filter status dan pencarian nama siswa */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex w-full flex-wrap gap-1 rounded-xl bg-slate-100 p-1 sm:w-fit">
+              <button
+                type="button"
+                onClick={() => setTabAktif("semua")}
+                aria-pressed={tabAktif === "semua"}
+                className={`flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold transition sm:flex-none ${
+                  tabAktif === "semua"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Semua
+              </button>
+              <button
+                type="button"
+                onClick={() => setTabAktif("lunas")}
+                aria-pressed={tabAktif === "lunas"}
+                className={`flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold transition sm:flex-none ${
+                  tabAktif === "lunas"
+                    ? "bg-white text-emerald-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Lunas
+              </button>
+              <button
+                type="button"
+                onClick={() => setTabAktif("belum-lunas")}
+                aria-pressed={tabAktif === "belum-lunas"}
+                className={`flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold transition sm:flex-none ${
+                  tabAktif === "belum-lunas"
+                    ? "bg-white text-amber-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Belum Lunas
+              </button>
+            </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={filterAbjad}
-            onChange={(e) => setFilterAbjad(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none"
-          >
-            <option value="">Semua Abjad (A-Z)</option>
-            {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((h) => (
-              <option key={h} value={h}>Huruf {h}</option>
-            ))}
-          </select>
-          <input 
-            type="text"
-            value={cariNama}
-            onChange={(e) => setCariNama(e.target.value)}
-            placeholder="Cari nama siswa..."
-            className="rounded-lg border border-slate-300 px-3 py-2 text-xs w-48 focus:outline-none"
-          />
+            <p className="text-xs text-slate-500">
+              Menampilkan <span className="font-semibold text-slate-700">{dataDisaring.length}</span> dari{" "}
+              <span className="font-semibold text-slate-700">{daftarKeuangan.length}</span> data
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(240px,360px)]">
+            <div>
+              <label htmlFor="filter-abjad" className="mb-1.5 block text-xs font-semibold text-slate-600">
+                Filter berdasarkan huruf awal nama
+              </label>
+              <select
+                id="filter-abjad"
+                value={filterAbjad}
+                onChange={(e) => setFilterAbjad(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              >
+                <option value="">Semua Abjad (A-Z)</option>
+                {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((h) => (
+                  <option key={h} value={h}>Huruf {h}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="cari-nama-siswa" className="mb-1.5 block text-xs font-semibold text-slate-600">
+                Cari nama siswa
+              </label>
+              <div className="relative">
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  id="cari-nama-siswa"
+                  type="search"
+                  value={cariNama}
+                  onChange={(e) => setCariNama(e.target.value)}
+                  placeholder="Ketik nama siswa yang dicari..."
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-11 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+                {cariNama && (
+                  <button
+                    type="button"
+                    onClick={() => setCariNama("")}
+                    aria-label="Hapus pencarian nama"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-rose-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
       {pesanError && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{pesanError}</p>}
 
@@ -389,7 +466,11 @@ export default function KeuanganPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-400">Tidak ada data keuangan.</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                    {cariNama.trim() || filterAbjad || tabAktif !== "semua"
+                      ? "Tidak ada data yang sesuai dengan pencarian atau filter."
+                      : "Belum ada data keuangan."}
+                  </td>
                 </tr>
               )}
             </tbody>

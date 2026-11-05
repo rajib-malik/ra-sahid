@@ -77,18 +77,62 @@ function serializeKeuangan(record: {
 }
 
 export async function GET(request: Request) {
-  const authorization = await authorizeApiRequest(PERMISSIONS.OPERATIONAL_READ, request);
+  const authorization = await authorizeApiRequest(
+    PERMISSIONS.OPERATIONAL_READ,
+    request
+  );
+
   if (authorization.response) return authorization.response;
 
   try {
+    // Mengambil kata kunci pencarian
+    const search = new URL(request.url)
+      .searchParams.get("search")
+      ?.trim();
+
     const records = await prisma.keuangan.findMany({
-      include: { siswa: { select: { nama: true, tingkatRombel: true } } },
-      orderBy: { createdAt: "desc" },
+      where: search
+        ? {
+            siswa: {
+              is: {
+                nama: {
+                  contains: search,
+                },
+              },
+            },
+          }
+        : undefined,
+
+      include: {
+        siswa: {
+          select: {
+            nama: true,
+            tingkatRombel: true,
+          },
+        },
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
     });
-    return NextResponse.json(records.map(serializeKeuangan), { headers: { "Cache-Control": "no-store" } });
+
+    return NextResponse.json(
+      records.map(serializeKeuangan),
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+
   } catch (error) {
     console.error("API Keuangan Error:", error);
-    return NextResponse.json({ error: "Gagal memuat data keuangan." }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Gagal memuat data keuangan." },
+      { status: 500 }
+    );
   }
 }
 
