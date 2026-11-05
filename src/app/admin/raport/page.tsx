@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Search, X } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 
 type Student = {
@@ -85,6 +86,7 @@ function getTahunAjaranSaatIni() {
 export default function RaportResmiPage() {
   const [siswa, setSiswa] = useState<Student[]>([]);
   const [nis, setNis] = useState("");
+  const [cariSiswa, setCariSiswa] = useState("");
   const [semester, setSemester] = useState("Semester 1 (Ganjil)");
   const [tahunAjaran, setTahunAjaran] = useState(getTahunAjaranSaatIni);
   const [raport, setRaport] = useState<RaportEntry[]>([]);
@@ -166,6 +168,13 @@ export default function RaportResmiPage() {
   }, [nis, semester, tahunAjaran]);
 
   const siswaTerpilih = siswa.find((item) => item.nis === nis);
+  const siswaDisaring = siswa.filter((student) => {
+    const kataKunci = cariSiswa.trim().toLocaleLowerCase("id");
+    return !kataKunci ||
+      student.nama.toLocaleLowerCase("id").includes(kataKunci) ||
+      student.nis.toLocaleLowerCase("id").includes(kataKunci) ||
+      student.kelas.toLocaleLowerCase("id").includes(kataKunci);
+  });
   const rekapRaport = nis ? raport : [];
 
   return (
@@ -184,11 +193,49 @@ export default function RaportResmiPage() {
 
       <div className="non-printable grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3">
         <div>
-          <label htmlFor="siswa-raport" className="block text-xs font-semibold text-slate-700">Pilih Siswa</label>
-          <select id="siswa-raport" value={nis} onChange={(event) => setNis(event.target.value)} disabled={memuatSiswa || siswa.length === 0} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm">
+          <label htmlFor="cari-siswa-raport" className="block text-xs font-semibold text-slate-700">Cari Siswa</label>
+          <div className="relative mt-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              id="cari-siswa-raport"
+              type="search"
+              value={cariSiswa}
+              onChange={(event) => setCariSiswa(event.target.value)}
+              placeholder="Cari nama, NIS, atau kelas..."
+              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            />
+            {cariSiswa && (
+              <button
+                type="button"
+                onClick={() => setCariSiswa("")}
+                aria-label="Hapus pencarian siswa"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            {siswaDisaring.length} dari {siswa.length} siswa ditemukan.
+          </p>
+          <label htmlFor="siswa-raport" className="mt-3 block text-xs font-semibold text-slate-700">Pilih Siswa</label>
+          <select
+            id="siswa-raport"
+            value={nis}
+            onChange={(event) => setNis(event.target.value)}
+            disabled={memuatSiswa || siswa.length === 0}
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm"
+          >
             <option value="">{memuatSiswa ? "Memuat siswa..." : "Pilih siswa"}</option>
-            {siswa.map((student) => <option key={student.nis} value={student.nis}>{student.nis} — {student.nama} ({student.kelas})</option>)}
+            {siswaDisaring.map((student) => (
+              <option key={student.nis} value={student.nis}>
+                {student.nis} — {student.nama} ({student.kelas})
+              </option>
+            ))}
           </select>
+          {!memuatSiswa && cariSiswa && siswaDisaring.length === 0 && (
+            <p className="mt-2 text-xs text-rose-600">Siswa tidak ditemukan. Coba kata kunci lain.</p>
+          )}
         </div>
         <div>
           <label htmlFor="semester-raport" className="block text-xs font-semibold text-slate-700">Periode Semester</label>

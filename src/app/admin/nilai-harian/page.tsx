@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Search, X } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 
 type Student = {
@@ -112,6 +113,7 @@ export default function NilaiHarianPage() {
   const [mataPelajaranBaru, setMataPelajaranBaru] = useState("");
   const [daftarSiswa, setDaftarSiswa] = useState<Student[]>([]);
   const [kelas, setKelas] = useState("");
+  const [cariSiswa, setCariSiswa] = useState("");
   const [daftarNilai, setDaftarNilai] = useState<GradeRow[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [menyimpan, setMenyimpan] = useState(false);
@@ -266,6 +268,12 @@ export default function NilaiHarianPage() {
   }
 
   const daftarKelas = [...new Set(daftarSiswa.map((student) => student.kelas))].sort();
+  const nilaiDisaring = daftarNilai.filter((row) => {
+    const kataKunci = cariSiswa.trim().toLocaleLowerCase("id");
+    return !kataKunci ||
+      row.nama.toLocaleLowerCase("id").includes(kataKunci) ||
+      row.nis.toLocaleLowerCase("id").includes(kataKunci);
+  });
 
   return (
     <div className="space-y-6">
@@ -323,6 +331,51 @@ export default function NilaiHarianPage() {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-white p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">Daftar Nilai Siswa</h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Cari berdasarkan nama atau NIS siswa.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <div className="relative w-full sm:w-80">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="search"
+                  value={cariSiswa}
+                  onChange={(event) => setCariSiswa(event.target.value)}
+                  placeholder="Cari nama atau NIS siswa..."
+                  aria-label="Cari nama atau NIS siswa"
+                  className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+                {cariSiswa && (
+                  <button
+                    type="button"
+                    onClick={() => setCariSiswa("")}
+                    aria-label="Hapus pencarian"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              {cariSiswa && (
+                <button
+                  type="button"
+                  onClick={() => setCariSiswa("")}
+                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-slate-500">
+            Menampilkan {nilaiDisaring.length} dari {daftarNilai.length} siswa.
+          </p>
+        </div>
         <form onSubmit={handleSimpan}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -337,7 +390,7 @@ export default function NilaiHarianPage() {
               <tbody className="divide-y divide-slate-200 text-slate-700">
                 {memuat ? (
                   <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400">Memuat data siswa dan nilai...</td></tr>
-                ) : daftarNilai.length ? daftarNilai.map((row) => (
+                ) : nilaiDisaring.length ? nilaiDisaring.map((row) => (
                   <tr key={row.nis}>
                     <td className="px-6 py-4">
                       <p className="font-semibold text-slate-900">{row.nama}</p>
@@ -359,7 +412,22 @@ export default function NilaiHarianPage() {
                     </td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400">Tidak ada siswa aktif di kelas ini.</td></tr>
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
+                      {daftarNilai.length === 0
+                        ? "Tidak ada siswa aktif di kelas ini."
+                        : "Siswa tidak ditemukan. Periksa kembali nama atau NIS yang dicari."}
+                      {cariSiswa && (
+                        <button
+                          type="button"
+                          onClick={() => setCariSiswa("")}
+                          className="ml-2 font-semibold text-emerald-700 hover:underline"
+                        >
+                          Hapus pencarian
+                        </button>
+                      )}
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
