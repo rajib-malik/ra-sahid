@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "@/lib/api-fetch";
+import { Search, X, Users, UserPlus, Eye, Pencil, Trash2 } from "lucide-react";
 
 type Siswa = {
   id: string;
@@ -287,18 +288,30 @@ export default function SiswaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Data Siswa RA Sahid</h1>
-          <p className="text-sm text-slate-500">Kelola identitas dan informasi lengkap siswa.</p>
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+            <Users className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Manajemen Siswa</p>
+            <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Data Siswa RA Sahid</h1>
+            <p className="mt-1 text-sm text-slate-500">Kelola identitas dan informasi lengkap siswa.</p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={handleBukaTambah}
-          className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
-        >
-          + Tambah Siswa Baru
-        </button>
+        <div className="flex flex-col gap-3 sm:items-end">
+          <div className="rounded-xl bg-slate-50 px-4 py-2 text-sm text-slate-600">
+            Total siswa <span className="ml-2 text-lg font-bold text-slate-900">{daftarSiswa.length}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleBukaTambah}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+          >
+            <UserPlus className="h-4 w-4" />
+            Tambah Siswa Baru
+          </button>
+        </div>
       </div>
 
       {errorMessage && (
@@ -308,82 +321,134 @@ export default function SiswaPage() {
       )}
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <input
-            type="search"
-            value={cari}
-            onChange={(event) => setCari(event.target.value)}
-            placeholder="Cari nama, NIS, atau NISN..."
-            aria-label="Cari siswa"
-            className="w-full max-w-md rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-          />
-          <select
-            aria-label="Filter tingkat rombel"
-            value={filterKelas}
-            onChange={(event) => setFilterKelas(event.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-          >
-            <option value="">Semua Tingkat-Rombel</option>
-            {daftarKelas.map((kelas) => <option key={kelas} value={kelas}>{kelas}</option>)}
-          </select>
+        <div className="border-b border-slate-200 bg-white p-4 sm:p-5">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Daftar Siswa</h2>
+              <p className="mt-1 text-xs text-slate-500">Cari, saring, dan kelola data siswa RA Sahid.</p>
+            </div>
+            <p className="text-xs font-medium text-slate-500">
+              Menampilkan <span className="font-bold text-slate-800">{siswaDisaring.length}</span> dari{" "}
+              <span className="font-bold text-slate-800">{daftarSiswa.length}</span> siswa
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_250px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                value={cari}
+                onChange={(event) => setCari(event.target.value)}
+                placeholder="Cari nama, NIS, atau NISN..."
+                aria-label="Cari siswa"
+                className="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50"
+              />
+              {cari && (
+                <button
+                  type="button"
+                  onClick={() => setCari("")}
+                  aria-label="Hapus pencarian"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <select
+              aria-label="Filter tingkat rombel"
+              value={filterKelas}
+              onChange={(event) => setFilterKelas(event.target.value)}
+              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50"
+            >
+              <option value="">Semua Tingkat-Rombel</option>
+              {daftarKelas.map((kelas) => <option key={kelas} value={kelas}>{kelas}</option>)}
+            </select>
+          </div>
+          {(cari || filterKelas) && (
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => { setCari(""); setFilterKelas(""); }}
+                className="text-xs font-semibold text-emerald-700 transition hover:text-emerald-900"
+              >
+                Reset filter
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
+          <table className="w-full min-w-[760px] text-left text-sm">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
-                <th className="px-6 py-3 font-semibold">Nama Lengkap</th>
-                <th className="px-6 py-3 font-semibold">NISN</th>
-                <th className="px-6 py-3 font-semibold">Tingkat-Rombel</th>
-                <th className="px-6 py-3 font-semibold">Status</th>
-                <th className="px-6 py-3 text-right font-semibold">Aksi</th>
+                <th className="px-5 py-4 font-semibold">Nama Lengkap</th>
+                <th className="px-5 py-4 font-semibold">NISN</th>
+                <th className="px-5 py-4 font-semibold">Tingkat-Rombel</th>
+                <th className="px-5 py-4 font-semibold">Status</th>
+                <th className="px-5 py-4 text-right font-semibold">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-slate-700">
               {loading ? (
-                <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-400">Memuat data siswa...</td></tr>
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400">Memuat data siswa...</td></tr>
               ) : siswaDisaring.length ? siswaDisaring.map((siswa) => (
-                <tr key={siswa.id} className="transition-colors hover:bg-slate-50">
-                  <td className="px-6 py-4 font-semibold text-slate-900">{siswa.nama}</td>
-                  <td className="px-6 py-4">{siswa.nisn || "-"}</td>
-                  <td className="px-6 py-4">
-                    <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                <tr key={siswa.id} className="transition-colors hover:bg-emerald-50/40">
+                  <td className="px-5 py-4">
+                    <p className="font-semibold text-slate-900">{siswa.nama}</p>
+                    <p className="mt-1 text-xs text-slate-400">NIS: {siswa.nis}</p>
+                  </td>
+                  <td className="px-5 py-4 text-sm text-slate-600">{siswa.nisn || "-"}</td>
+                  <td className="px-5 py-4">
+                    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                       {siswa.tingkatRombel}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  <td className="px-5 py-4">
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                       siswa.status === "Aktif" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-700"
                     }`}>
                       {siswa.status}
                     </span>
                   </td>
-                  <td className="space-x-2 px-6 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setSiswaDetail(siswa)}
-                      className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
-                    >
-                      Detail
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleBukaEdit(siswa)}
-                      className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleHapus(siswa.id, siswa.nama)}
-                      className="rounded-md bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100"
-                    >
-                      Hapus
-                    </button>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSiswaDetail(siswa)}
+                        aria-label={`Lihat detail ${siswa.nama}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                      >
+                        <Eye className="h-3.5 w-3.5" /> Detail
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBukaEdit(siswa)}
+                        aria-label={`Edit ${siswa.nama}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleHapus(siswa.id, siswa.nama)}
+                        aria-label={`Hapus ${siswa.nama}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Hapus
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-400">Tidak ada data siswa ditemukan.</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-6 py-14 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                      <Users className="h-6 w-6" />
+                    </div>
+                    <p className="mt-3 text-sm font-semibold text-slate-700">Tidak ada data siswa ditemukan</p>
+                    <p className="mt-1 text-xs text-slate-400">Coba ubah kata kunci pencarian atau filter tingkat-rombel.</p>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
