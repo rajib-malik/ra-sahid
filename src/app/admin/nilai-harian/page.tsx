@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, ClipboardList, CalendarDays, BookOpen, Users, Save } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 
 type Student = {
@@ -277,21 +277,46 @@ export default function NilaiHarianPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Input Nilai Harian</h1>
-        <p className="text-sm text-slate-500">Daftar siswa dan rekap nilai diambil dari database.</p>
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50 p-5 shadow-sm sm:p-6">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-emerald-100/60 blur-2xl" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-md shadow-emerald-900/10">
+              <ClipboardList className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Akademik • Penilaian</p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Input Nilai Harian</h1>
+              <p className="mt-1 text-sm text-slate-500">Kelola penilaian perkembangan siswa berdasarkan kegiatan pembelajaran.</p>
+            </div>
+          </div>
+          <div className="inline-flex w-fit items-center gap-2 rounded-xl border border-emerald-100 bg-white/90 px-4 py-2.5 text-sm font-semibold text-emerald-800 shadow-sm">
+            <Users className="h-4 w-4" />
+            {daftarNilai.length} Siswa di kelas
+          </div>
+        </div>
       </div>
 
-      {pesanError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{pesanError}</p>}
-      {pesanSukses && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{pesanSukses}</p>}
+      {pesanError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-sm">{pesanError}</p>}
+      {pesanSukses && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm">{pesanSukses}</p>}
 
-      <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+            <CalendarDays className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Pengaturan Penilaian</h2>
+            <p className="mt-0.5 text-xs text-slate-500">Tentukan tanggal, mata pelajaran, dan kelompok siswa.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label htmlFor="tanggal-nilai" className="block text-xs font-semibold text-slate-700">Tanggal Kegiatan</label>
-          <input id="tanggal-nilai" type="date" value={tanggal} onChange={(event) => setTanggal(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm" />
+          <input id="tanggal-nilai" type="date" value={tanggal} onChange={(event) => setTanggal(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50" />
         </div>
         <div>
-          <label htmlFor="mata-pelajaran-nilai" className="block text-xs font-semibold text-slate-700">Mata Pelajaran</label>
+          <label htmlFor="mata-pelajaran-nilai" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"><BookOpen className="h-3.5 w-3.5 text-slate-400" /> Mata Pelajaran</label>
           <select
             id="mata-pelajaran-nilai"
             value={tambahMataPelajaran ? OPSI_TAMBAH_MATA_PELAJARAN : kegiatan}
@@ -305,7 +330,7 @@ export default function NilaiHarianPage() {
                 setKegiatan(value);
               }
             }}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm"
+            className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50"
           >
             {daftarMataPelajaran.map((item) => <option key={item} value={item}>{item}</option>)}
             <option value={OPSI_TAMBAH_MATA_PELAJARAN}>+ Tambah Mata Pelajaran Baru...</option>
@@ -318,25 +343,26 @@ export default function NilaiHarianPage() {
               value={mataPelajaranBaru}
               onChange={(event) => setMataPelajaranBaru(event.target.value)}
               placeholder="Ketik nama mata pelajaran"
-              className="mt-2 w-full rounded-lg border border-slate-300 p-2.5 text-sm"
+              className="mt-2 h-11 w-full rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50"
             />
           )}
         </div>
         <div>
           <label htmlFor="kelas-nilai" className="block text-xs font-semibold text-slate-700">Kelompok Kelas</label>
-          <select id="kelas-nilai" value={kelas} onChange={(event) => setKelas(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm">
+          <select id="kelas-nilai" value={kelas} onChange={(event) => setKelas(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50">
             {daftarKelas.map((item) => <option key={item}>{item}</option>)}
           </select>
         </div>
-      </div>
+        </div>
+      </section>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 bg-white p-4 sm:p-5">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-slate-50/70 p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-base font-semibold text-slate-900">Daftar Nilai Siswa</h2>
+              <h2 className="text-base font-bold text-slate-900">Daftar Nilai Siswa</h2>
               <p className="mt-1 text-xs text-slate-500">
-                Cari berdasarkan nama atau NIS siswa.
+                Masukkan nilai dan predikat untuk setiap siswa aktif.
               </p>
             </div>
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -348,7 +374,7 @@ export default function NilaiHarianPage() {
                   onChange={(event) => setCariSiswa(event.target.value)}
                   placeholder="Cari nama atau NIS siswa..."
                   aria-label="Cari nama atau NIS siswa"
-                  className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="h-11 w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50"
                 />
                 {cariSiswa && (
                   <button
