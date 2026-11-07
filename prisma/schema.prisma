@@ -51,13 +51,17 @@ model Siswa {
   nilaiHarian NilaiHarian[]
 }
 
+
 model Guru {
-  id       String @id @default(uuid())
-  nip      String @unique
-  nama     String
-  jabatan  String
-  status   String @default("Aktif")
+  id           String    @id @default(uuid())
+  nip          String    @unique
+  nama         String
+  tempatLahir  String?
+  tanggalLahir DateTime? @db.Date
+  jabatan      String
+  status       String    @default("Aktif")
 }
+
 
 model Keuangan {
   id          String   @id @default(uuid())
