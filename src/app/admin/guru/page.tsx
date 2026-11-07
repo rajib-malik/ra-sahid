@@ -35,6 +35,7 @@ function isGuru(value: unknown): value is Record<string, unknown> {
   return isRecord(value) && isValidIdentifier(value.id) && isValidIdentifier(value.nama);
 }
 
+
 function normalizeGuru(value: unknown): Guru | null {
   if (!isGuru(value)) return null;
 
@@ -42,8 +43,15 @@ function normalizeGuru(value: unknown): Guru | null {
     id: text(value.id),
     nip: text(value.nip, "-"),
     nama: text(value.nama, "Nama tidak tersedia"),
-    tempat_lahir: text(value.tempat_lahir),
-    tanggal_lahir: text(value.tanggal_lahir),
+
+    // Membaca nama field dari respons Prisma
+    tempat_lahir: text(value.tempatLahir),
+
+    // Mengambil tanggal dalam format YYYY-MM-DD
+    tanggal_lahir: value.tanggalLahir
+      ? String(value.tanggalLahir).slice(0, 10)
+      : "",
+
     jabatan: text(value.jabatan, "Belum ditentukan"),
     status: text(value.status, "Aktif"),
   };
