@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
@@ -67,8 +68,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isValidIdentifier(value: unknown) {
-  return (typeof value === "string" && value.trim().length > 0) ||
-    (typeof value === "number" && Number.isFinite(value));
+  return (
+    (typeof value === "string" && value.trim().length > 0) ||
+    (typeof value === "number" && Number.isFinite(value))
+  );
 }
 
 type SiswaApiRecord = Record<string, unknown> & {
@@ -77,28 +80,33 @@ type SiswaApiRecord = Record<string, unknown> & {
   nama: string | number;
 };
 
-function isSiswa(
-  value: unknown,
-): value is SiswaApiRecord {
-  return isRecord(value) &&
+function isSiswa(value: unknown): value is SiswaApiRecord {
+  return (
+    isRecord(value) &&
     isValidIdentifier(value.id) &&
     isValidIdentifier(value.nis) &&
-    isValidIdentifier(value.nama);
+    isValidIdentifier(value.nama)
+  );
 }
 
 function toText(value: unknown): string | null {
   if (typeof value === "string") return value;
-  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
   return null;
 }
 
 function normalizeSiswa(value: SiswaApiRecord): Siswa {
   const umurValue = value.umur;
-  const umur = typeof umurValue === "number" && Number.isFinite(umurValue)
-    ? umurValue
-    : typeof umurValue === "string" && umurValue.trim() && Number.isFinite(Number(umurValue))
-      ? Number(umurValue)
-      : null;
+  const umur =
+    typeof umurValue === "number" && Number.isFinite(umurValue)
+      ? umurValue
+      : typeof umurValue === "string" &&
+          umurValue.trim() &&
+          Number.isFinite(Number(umurValue))
+        ? Number(umurValue)
+        : null;
 
   return {
     id: String(value.id),
@@ -108,7 +116,8 @@ function normalizeSiswa(value: SiswaApiRecord): Siswa {
     nama: String(value.nama),
     tempatLahir: toText(value.tempatLahir),
     tanggalLahir: toText(value.tanggalLahir),
-    tingkatRombel: toText(value.tingkatRombel) ?? toText(value.kelas) ?? "",
+    tingkatRombel:
+      toText(value.tingkatRombel) ?? toText(value.kelas) ?? "",
     umur,
     jenisKelamin: toText(value.jenisKelamin) ?? toText(value.jk) ?? "",
     status: toText(value.status) ?? "Aktif",
@@ -122,7 +131,9 @@ function normalizeSiswa(value: SiswaApiRecord): Siswa {
 }
 
 function getErrorMessage(value: unknown, fallback: string) {
-  return isRecord(value) && typeof value.error === "string" ? value.error : fallback;
+  return isRecord(value) && typeof value.error === "string"
+    ? value.error
+    : fallback;
 }
 
 function formDariSiswa(siswa: Siswa): FormSiswa {
@@ -165,6 +176,11 @@ const DETAIL_FIELDS: ReadonlyArray<readonly [keyof Siswa, string]> = [
   ["wali", "Wali"],
 ];
 
+const INPUT_CLASS =
+  "mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-normal text-slate-900 outline-none placeholder:text-slate-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
+
+const LABEL_CLASS = "text-xs font-semibold text-slate-800";
+
 export default function SiswaPage() {
   const [daftarSiswa, setDaftarSiswa] = useState<Siswa[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,17 +197,29 @@ export default function SiswaPage() {
 
   async function fetchSiswa() {
     setLoading(true);
+
     try {
-      const response = await apiFetch("/api/siswa", { cache: "no-store" });
+      const response = await apiFetch("/api/siswa", {
+        cache: "no-store",
+      });
+
       const data: unknown = await response.json();
+
       if (!response.ok || !Array.isArray(data) || !data.every(isSiswa)) {
-        throw new Error(getErrorMessage(data, "Gagal memuat data siswa."));
+        throw new Error(
+          getErrorMessage(data, "Gagal memuat data siswa."),
+        );
       }
+
       setDaftarSiswa(data.map(normalizeSiswa));
       setErrorMessage("");
     } catch (error) {
       console.error("Gagal memuat data siswa:", error);
-      setErrorMessage(error instanceof Error ? error.message : "Gagal memuat data siswa.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Gagal memuat data siswa.",
+      );
     } finally {
       setLoading(false);
     }
@@ -205,6 +233,7 @@ export default function SiswaPage() {
     setIsEdit(false);
     setIdEdit(null);
     setForm({ ...FORM_KOSONG });
+    setErrorMessage("");
     setBukaModal(true);
   }
 
@@ -212,21 +241,32 @@ export default function SiswaPage() {
     setIsEdit(true);
     setIdEdit(siswa.id);
     setForm(formDariSiswa(siswa));
+    setErrorMessage("");
     setBukaModal(true);
   }
 
-  function updateField<K extends keyof FormSiswa>(field: K, value: FormSiswa[K]) {
-    setForm((current) => ({ ...current, [field]: value }));
+  function updateField<K extends keyof FormSiswa>(
+    field: K,
+    value: FormSiswa[K],
+  ) {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
   }
 
   async function handleSimpan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     setSaving(true);
     setErrorMessage("");
+
     try {
       const response = await apiFetch("/api/siswa", {
         method: isEdit && idEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           ...(isEdit && idEdit ? { id: idEdit } : {}),
           nis: form.nis.trim(),
@@ -247,62 +287,111 @@ export default function SiswaPage() {
           wali: form.wali.trim() || null,
         }),
       });
+
       const result: unknown = await response.json();
+
       if (!response.ok) {
-        throw new Error(getErrorMessage(result, "Gagal menyimpan data siswa."));
+        throw new Error(
+          getErrorMessage(result, "Gagal menyimpan data siswa."),
+        );
       }
 
       setBukaModal(false);
       await fetchSiswa();
     } catch (error) {
       console.error("Gagal menyimpan data siswa:", error);
-      setErrorMessage(error instanceof Error ? error.message : "Gagal menyimpan data siswa.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Gagal menyimpan data siswa.",
+      );
     } finally {
       setSaving(false);
     }
   }
 
   async function handleHapus(id: string, namaSiswa: string) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus data siswa ${namaSiswa}?`)) return;
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus data siswa ${namaSiswa}?`,
+      )
+    ) {
+      return;
+    }
+
     try {
-      const response = await apiFetch(`/api/siswa?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const response = await apiFetch(
+        `/api/siswa?id=${encodeURIComponent(id)}`,
+        { method: "DELETE" },
+      );
+
       const result: unknown = await response.json();
+
       if (!response.ok) {
-        throw new Error(getErrorMessage(result, "Gagal menghapus data siswa."));
+        throw new Error(
+          getErrorMessage(result, "Gagal menghapus data siswa."),
+        );
       }
+
       await fetchSiswa();
     } catch (error) {
       console.error("Gagal menghapus data siswa:", error);
-      setErrorMessage(error instanceof Error ? error.message : "Gagal menghapus data siswa.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Gagal menghapus data siswa.",
+      );
     }
   }
 
-  const daftarKelas = [...new Set(daftarSiswa.map((siswa) => siswa.tingkatRombel))].sort();
+  const daftarKelas = [
+    ...new Set(daftarSiswa.map((siswa) => siswa.tingkatRombel)),
+  ].sort();
+
   const siswaDisaring = daftarSiswa.filter((siswa) => {
     const kataKunci = cari.toLocaleLowerCase("id-ID");
-    const cocokKataKunci = siswa.nama.toLocaleLowerCase("id-ID").includes(kataKunci) ||
+
+    const cocokKataKunci =
+      siswa.nama.toLocaleLowerCase("id-ID").includes(kataKunci) ||
       siswa.nis.toLocaleLowerCase("id-ID").includes(kataKunci) ||
       (siswa.nisn ?? "").includes(cari);
-    return cocokKataKunci && (!filterKelas || siswa.tingkatRombel === filterKelas);
+
+    return (
+      cocokKataKunci &&
+      (!filterKelas || siswa.tingkatRombel === filterKelas)
+    );
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-slate-900">
+      {/* HEADER */}
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-800">
             <Users className="h-6 w-6" />
           </div>
+
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Manajemen Siswa</p>
-            <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Data Siswa RA Sahid</h1>
-            <p className="mt-1 text-sm text-slate-500">Kelola identitas dan informasi lengkap siswa.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-800">
+              Manajemen Siswa
+            </p>
+            <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
+              Data Siswa RA Sahid
+            </h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Kelola identitas dan informasi lengkap siswa.
+            </p>
           </div>
         </div>
+
         <div className="flex flex-col gap-3 sm:items-end">
-          <div className="rounded-xl bg-slate-50 px-4 py-2 text-sm text-slate-600">
-            Total siswa <span className="ml-2 text-lg font-bold text-slate-900">{daftarSiswa.length}</span>
+          <div className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
+            Total siswa
+            <span className="ml-2 text-lg font-bold text-slate-950">
+              {daftarSiswa.length}
+            </span>
           </div>
+
           <button
             type="button"
             onClick={handleBukaTambah}
@@ -314,62 +403,91 @@ export default function SiswaPage() {
         </div>
       </div>
 
-      {errorMessage && (
-        <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+      {/* ERROR */}
+      {errorMessage && !bukaModal && (
+        <p
+          role="alert"
+          className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-900"
+        >
           {errorMessage}
         </p>
       )}
 
+      {/* TABEL SISWA */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 bg-white p-4 sm:p-5">
           <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-base font-bold text-slate-900">Daftar Siswa</h2>
-              <p className="mt-1 text-xs text-slate-500">Cari, saring, dan kelola data siswa RA Sahid.</p>
+              <h2 className="text-base font-bold text-slate-950">
+                Daftar Siswa
+              </h2>
+              <p className="mt-1 text-xs text-slate-600">
+                Cari, saring, dan kelola data siswa RA Sahid.
+              </p>
             </div>
-            <p className="text-xs font-medium text-slate-500">
-              Menampilkan <span className="font-bold text-slate-800">{siswaDisaring.length}</span> dari{" "}
-              <span className="font-bold text-slate-800">{daftarSiswa.length}</span> siswa
+
+            <p className="text-xs font-medium text-slate-600">
+              Menampilkan{" "}
+              <span className="font-bold text-slate-950">
+                {siswaDisaring.length}
+              </span>{" "}
+              dari{" "}
+              <span className="font-bold text-slate-950">
+                {daftarSiswa.length}
+              </span>{" "}
+              siswa
             </p>
           </div>
+
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_250px]">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+
               <input
                 type="search"
                 value={cari}
                 onChange={(event) => setCari(event.target.value)}
                 placeholder="Cari nama, NIS, atau NISN..."
                 aria-label="Cari siswa"
-                className="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50"
+                className="h-11 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-50"
               />
+
               {cari && (
                 <button
                   type="button"
                   onClick={() => setCari("")}
                   aria-label="Hapus pencarian"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
+
             <select
               aria-label="Filter tingkat rombel"
               value={filterKelas}
               onChange={(event) => setFilterKelas(event.target.value)}
-              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50"
+              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-50"
             >
               <option value="">Semua Tingkat-Rombel</option>
-              {daftarKelas.map((kelas) => <option key={kelas} value={kelas}>{kelas}</option>)}
+              {daftarKelas.map((kelas) => (
+                <option key={kelas} value={kelas}>
+                  {kelas}
+                </option>
+              ))}
             </select>
           </div>
+
           {(cari || filterKelas) && (
             <div className="mt-3 flex justify-end">
               <button
                 type="button"
-                onClick={() => { setCari(""); setFilterKelas(""); }}
-                className="text-xs font-semibold text-emerald-700 transition hover:text-emerald-900"
+                onClick={() => {
+                  setCari("");
+                  setFilterKelas("");
+                }}
+                className="text-xs font-bold text-emerald-800 transition hover:text-emerald-950"
               >
                 Reset filter
               </button>
@@ -379,74 +497,113 @@ export default function SiswaPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-slate-200 bg-slate-100 text-xs uppercase tracking-wide text-slate-700">
               <tr>
-                <th className="px-5 py-4 font-semibold">Nama Lengkap</th>
-                <th className="px-5 py-4 font-semibold">NISN</th>
-                <th className="px-5 py-4 font-semibold">Tingkat-Rombel</th>
-                <th className="px-5 py-4 font-semibold">Status</th>
-                <th className="px-5 py-4 text-right font-semibold">Aksi</th>
+                <th className="px-5 py-4 font-bold">Nama Lengkap</th>
+                <th className="px-5 py-4 font-bold">NISN</th>
+                <th className="px-5 py-4 font-bold">Tingkat-Rombel</th>
+                <th className="px-5 py-4 font-bold">Status</th>
+                <th className="px-5 py-4 text-right font-bold">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-700">
+
+            <tbody className="divide-y divide-slate-200 text-slate-800">
               {loading ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400">Memuat data siswa...</td></tr>
-              ) : siswaDisaring.length ? siswaDisaring.map((siswa) => (
-                <tr key={siswa.id} className="transition-colors hover:bg-emerald-50/40">
-                  <td className="px-5 py-4">
-                    <p className="font-semibold text-slate-900">{siswa.nama}</p>
-                    <p className="mt-1 text-xs text-slate-400">NIS: {siswa.nis}</p>
-                  </td>
-                  <td className="px-5 py-4 text-sm text-slate-600">{siswa.nisn || "-"}</td>
-                  <td className="px-5 py-4">
-                    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                      {siswa.tingkatRombel}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                      siswa.status === "Aktif" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-700"
-                    }`}>
-                      {siswa.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSiswaDetail(siswa)}
-                        aria-label={`Lihat detail ${siswa.nama}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-                      >
-                        <Eye className="h-3.5 w-3.5" /> Detail
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleBukaEdit(siswa)}
-                        aria-label={`Edit ${siswa.nama}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
-                      >
-                        <Pencil className="h-3.5 w-3.5" /> Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleHapus(siswa.id, siswa.nama)}
-                        aria-label={`Hapus ${siswa.nama}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Hapus
-                      </button>
-                    </div>
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-12 text-center text-sm font-medium text-slate-600"
+                  >
+                    Memuat data siswa...
                   </td>
                 </tr>
-              )) : (
+              ) : siswaDisaring.length ? (
+                siswaDisaring.map((siswa) => (
+                  <tr
+                    key={siswa.id}
+                    className="transition-colors hover:bg-emerald-50/50"
+                  >
+                    <td className="px-5 py-4">
+                      <p className="font-bold text-slate-950">
+                        {siswa.nama}
+                      </p>
+                      <p className="mt-1 text-xs font-medium text-slate-600">
+                        NIS: {siswa.nis}
+                      </p>
+                    </td>
+
+                    <td className="px-5 py-4 text-sm font-medium text-slate-700">
+                      {siswa.nisn || "-"}
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-800">
+                        {siswa.tingkatRombel}
+                      </span>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                          siswa.status === "Aktif"
+                            ? "bg-emerald-50 text-emerald-800"
+                            : "bg-slate-100 text-slate-800"
+                        }`}
+                      >
+                        {siswa.status}
+                      </span>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSiswaDetail(siswa)}
+                          aria-label={`Lihat detail ${siswa.nama}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-100"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Detail
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleBukaEdit(siswa)}
+                          aria-label={`Edit ${siswa.nama}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-800 transition hover:bg-blue-100"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void handleHapus(siswa.id, siswa.nama)
+                          }
+                          aria-label={`Hapus ${siswa.nama}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-800 transition hover:bg-rose-100"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan={5} className="px-6 py-14 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
                       <Users className="h-6 w-6" />
                     </div>
-                    <p className="mt-3 text-sm font-semibold text-slate-700">Tidak ada data siswa ditemukan</p>
-                    <p className="mt-1 text-xs text-slate-400">Coba ubah kata kunci pencarian atau filter tingkat-rombel.</p>
+
+                    <p className="mt-3 text-sm font-bold text-slate-900">
+                      Tidak ada data siswa ditemukan
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      Coba ubah kata kunci pencarian atau filter tingkat-rombel.
+                    </p>
                   </td>
                 </tr>
               )}
@@ -455,30 +612,50 @@ export default function SiswaPage() {
         </div>
       </div>
 
+      {/* MODAL DETAIL */}
       {siswaDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" role="presentation">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="detail-siswa-heading"
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xl"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 id="detail-siswa-heading" className="text-lg font-bold text-slate-900">Detail Siswa</h2>
-                <p className="mt-1 text-sm text-slate-500">{siswaDetail.nama}</p>
+                <h2
+                  id="detail-siswa-heading"
+                  className="text-lg font-bold text-slate-950"
+                >
+                  Detail Siswa
+                </h2>
+                <p className="mt-1 text-sm font-medium text-slate-600">
+                  {siswaDetail.nama}
+                </p>
               </div>
-              <button type="button" onClick={() => setSiswaDetail(null)} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+
+              <button
+                type="button"
+                onClick={() => setSiswaDetail(null)}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-bold text-slate-800 hover:bg-slate-100"
+              >
                 Tutup
               </button>
             </div>
+
             <dl className="mt-6 grid gap-4 sm:grid-cols-2">
               {DETAIL_FIELDS.map(([field, label]) => {
                 const value = siswaDetail[field];
+
                 return (
-                  <div key={field} className={field === "alamat" ? "sm:col-span-2" : ""}>
-                    <dt className="text-xs font-semibold text-slate-500">{label}</dt>
-                    <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-900">
+                  <div
+                    key={field}
+                    className={field === "alamat" ? "sm:col-span-2" : ""}
+                  >
+                    <dt className="text-xs font-bold text-slate-600">
+                      {label}
+                    </dt>
+                    <dd className="mt-1 whitespace-pre-wrap break-words text-sm font-medium text-slate-950">
                       {value === null || value === "" ? "-" : String(value)}
                     </dd>
                   </div>
@@ -489,111 +666,290 @@ export default function SiswaPage() {
         </div>
       )}
 
+      {/* MODAL TAMBAH DAN EDIT */}
       {bukaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="form-siswa-heading"
-            className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+            className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xl"
           >
-            <h2 id="form-siswa-heading" className="text-lg font-bold text-slate-900">
+            <h2
+              id="form-siswa-heading"
+              className="text-lg font-bold text-slate-950"
+            >
               {isEdit ? "Edit Data Siswa" : "Tambah Siswa Baru"}
             </h2>
-            <p className="mt-1 text-xs text-slate-500">Lengkapi identitas, informasi keluarga, dan data pendukung siswa.</p>
+
+            <p className="mt-1 text-xs font-medium text-slate-600">
+              Lengkapi identitas, informasi keluarga, dan data pendukung siswa.
+            </p>
 
             <form onSubmit={handleSimpan} className="mt-5 space-y-6">
               <fieldset>
-                <legend className="mb-3 text-sm font-semibold text-slate-800">Identitas Siswa</legend>
+                <legend className="mb-3 text-sm font-bold text-slate-900">
+                  Identitas Siswa
+                </legend>
+
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <label className="text-xs font-semibold text-slate-700">
+                  <label className={LABEL_CLASS}>
                     NIS *
-                    <input required maxLength={50} value={form.nis} onChange={(event) => updateField("nis", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      required
+                      maxLength={50}
+                      value={form.nis}
+                      onChange={(event) =>
+                        updateField("nis", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     NISN
-                    <input inputMode="numeric" pattern="[0-9]{10}" maxLength={10} value={form.nisn} onChange={(event) => updateField("nisn", event.target.value)} placeholder="10 digit" className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      inputMode="numeric"
+                      pattern="[0-9]{10}"
+                      maxLength={10}
+                      value={form.nisn}
+                      onChange={(event) =>
+                        updateField("nisn", event.target.value)
+                      }
+                      placeholder="10 digit"
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     NIK
-                    <input inputMode="numeric" pattern="[0-9]{16}" maxLength={16} value={form.nik} onChange={(event) => updateField("nik", event.target.value)} placeholder="16 digit" className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      inputMode="numeric"
+                      pattern="[0-9]{16}"
+                      maxLength={16}
+                      value={form.nik}
+                      onChange={(event) =>
+                        updateField("nik", event.target.value)
+                      }
+                      placeholder="16 digit"
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700 sm:col-span-2 lg:col-span-3">
+
+                  <label className={`${LABEL_CLASS} sm:col-span-2 lg:col-span-3`}>
                     Nama Lengkap *
-                    <input required maxLength={150} value={form.nama} onChange={(event) => updateField("nama", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      required
+                      maxLength={150}
+                      value={form.nama}
+                      onChange={(event) =>
+                        updateField("nama", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Tempat Lahir
-                    <input maxLength={100} value={form.tempatLahir} onChange={(event) => updateField("tempatLahir", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      maxLength={100}
+                      value={form.tempatLahir}
+                      onChange={(event) =>
+                        updateField("tempatLahir", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Tanggal Lahir
-                    <input type="date" value={form.tanggalLahir} onChange={(event) => updateField("tanggalLahir", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      type="date"
+                      value={form.tanggalLahir}
+                      onChange={(event) =>
+                        updateField("tanggalLahir", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Umur (tahun)
-                    <input type="number" min="0" max="100" step="1" value={form.umur} onChange={(event) => updateField("umur", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={form.umur}
+                      onChange={(event) =>
+                        updateField("umur", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Tingkat-Rombel *
-                    <input required maxLength={50} value={form.tingkatRombel} onChange={(event) => updateField("tingkatRombel", event.target.value)} placeholder="Misalnya TK A" className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      required
+                      maxLength={50}
+                      value={form.tingkatRombel}
+                      onChange={(event) =>
+                        updateField("tingkatRombel", event.target.value)
+                      }
+                      placeholder="Misalnya TK A"
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Jenis Kelamin *
-                    <select required value={form.jenisKelamin} onChange={(event) => updateField("jenisKelamin", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-normal">
+                    <select
+                      required
+                      value={form.jenisKelamin}
+                      onChange={(event) =>
+                        updateField("jenisKelamin", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    >
                       <option value="Laki-laki">Laki-laki</option>
                       <option value="Perempuan">Perempuan</option>
                     </select>
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Status *
-                    <select required value={form.status} onChange={(event) => updateField("status", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-normal">
-                      {!["Aktif", "Lulus", "Keluar"].includes(form.status) && <option value={form.status}>{form.status}</option>}
+                    <select
+                      required
+                      value={form.status}
+                      onChange={(event) =>
+                        updateField("status", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    >
+                      {!["Aktif", "Lulus", "Keluar"].includes(form.status) && (
+                        <option value={form.status}>{form.status}</option>
+                      )}
                       <option value="Aktif">Aktif</option>
                       <option value="Lulus">Lulus</option>
                       <option value="Keluar">Keluar</option>
                     </select>
                   </label>
-                  <label className="text-xs font-semibold text-slate-700 sm:col-span-2 lg:col-span-3">
+
+                  <label className={`${LABEL_CLASS} sm:col-span-2 lg:col-span-3`}>
                     Alamat Domisili
-                    <textarea rows={2} maxLength={2000} value={form.alamat} onChange={(event) => updateField("alamat", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <textarea
+                      rows={2}
+                      maxLength={2000}
+                      value={form.alamat}
+                      onChange={(event) =>
+                        updateField("alamat", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
                 </div>
               </fieldset>
 
               <fieldset>
-                <legend className="mb-3 text-sm font-semibold text-slate-800">Informasi Pendukung dan Keluarga</legend>
+                <legend className="mb-3 text-sm font-bold text-slate-900">
+                  Informasi Pendukung dan Keluarga
+                </legend>
+
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="text-xs font-semibold text-slate-700">
+                  <label className={LABEL_CLASS}>
                     Kebutuhan Khusus
-                    <textarea rows={2} maxLength={1000} value={form.kebutuhanKhusus} onChange={(event) => updateField("kebutuhanKhusus", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <textarea
+                      rows={2}
+                      maxLength={1000}
+                      value={form.kebutuhanKhusus}
+                      onChange={(event) =>
+                        updateField("kebutuhanKhusus", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Disabilitas
-                    <textarea rows={2} maxLength={1000} value={form.disabilitas} onChange={(event) => updateField("disabilitas", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <textarea
+                      rows={2}
+                      maxLength={1000}
+                      value={form.disabilitas}
+                      onChange={(event) =>
+                        updateField("disabilitas", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Ayah Kandung
-                    <input maxLength={150} value={form.ayahKandung} onChange={(event) => updateField("ayahKandung", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      maxLength={150}
+                      value={form.ayahKandung}
+                      onChange={(event) =>
+                        updateField("ayahKandung", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700">
+
+                  <label className={LABEL_CLASS}>
                     Ibu Kandung
-                    <input maxLength={150} value={form.ibuKandung} onChange={(event) => updateField("ibuKandung", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      maxLength={150}
+                      value={form.ibuKandung}
+                      onChange={(event) =>
+                        updateField("ibuKandung", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
-                  <label className="text-xs font-semibold text-slate-700 sm:col-span-2">
+
+                  <label className={`${LABEL_CLASS} sm:col-span-2`}>
                     Wali
-                    <input maxLength={150} value={form.wali} onChange={(event) => updateField("wali", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm font-normal" />
+                    <input
+                      maxLength={150}
+                      value={form.wali}
+                      onChange={(event) =>
+                        updateField("wali", event.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
                   </label>
                 </div>
               </fieldset>
 
-              {errorMessage && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{errorMessage}</p>}
-              <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
-                <button type="button" onClick={() => setBukaModal(false)} disabled={saving} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+              {errorMessage && (
+                <p
+                  role="alert"
+                  className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-900"
+                >
+                  {errorMessage}
+                </p>
+              )}
+
+              <div className="flex justify-end gap-3 border-t border-slate-200 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setBukaModal(false)}
+                  disabled={saving}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 transition hover:bg-slate-100 disabled:opacity-50"
+                >
                   Batal
                 </button>
-                <button type="submit" disabled={saving} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
-                  {saving ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Simpan Siswa"}
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-800 disabled:opacity-50"
+                >
+                  {saving
+                    ? "Menyimpan..."
+                    : isEdit
+                      ? "Simpan Perubahan"
+                      : "Simpan Siswa"}
                 </button>
               </div>
             </form>

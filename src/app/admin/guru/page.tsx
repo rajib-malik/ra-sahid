@@ -35,7 +35,6 @@ function isGuru(value: unknown): value is Record<string, unknown> {
   return isRecord(value) && isValidIdentifier(value.id) && isValidIdentifier(value.nama);
 }
 
-
 function normalizeGuru(value: unknown): Guru | null {
   if (!isGuru(value)) return null;
 
@@ -43,15 +42,10 @@ function normalizeGuru(value: unknown): Guru | null {
     id: text(value.id),
     nip: text(value.nip, "-"),
     nama: text(value.nama, "Nama tidak tersedia"),
-
-    // Membaca nama field dari respons Prisma
     tempat_lahir: text(value.tempatLahir),
-
-    // Mengambil tanggal dalam format YYYY-MM-DD
     tanggal_lahir: value.tanggalLahir
       ? String(value.tanggalLahir).slice(0, 10)
       : "",
-
     jabatan: text(value.jabatan, "Belum ditentukan"),
     status: text(value.status, "Aktif"),
   };
@@ -71,7 +65,7 @@ function formatTanggal(tanggal: string) {
 }
 
 const inputClass =
-  "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100";
+  "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100";
 
 export default function GuruPage() {
   const [daftarGuru, setDaftarGuru] = useState<Guru[]>([]);
@@ -240,25 +234,28 @@ export default function GuruPage() {
   const jumlahJabatan = new Set(daftarGuru.map((guru) => guru.jabatan)).size;
 
   return (
-    <div className="min-h-screen space-y-6 bg-slate-50/50 p-1 sm:p-3">
+    <div className="min-h-screen space-y-6 bg-slate-50 p-1 text-slate-900 sm:p-3">
+
       {/* Header */}
-      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6">
+      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-emerald-600">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-800">
+            <span className="h-2 w-2 rounded-full bg-emerald-600" />
             Manajemen Sekolah
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
+
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             Data Guru & Staf
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+
+          <p className="mt-1 text-sm text-slate-700">
             Kelola informasi dan data tenaga pendidik RA Modern Sahid.
           </p>
         </div>
 
         <button
           onClick={handleBukaTambah}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:-translate-y-0.5 hover:bg-emerald-800"
         >
           <span className="text-lg">+</span>
           Tambah Guru
@@ -267,74 +264,91 @@ export default function GuruPage() {
 
       {/* Ringkasan */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Total Guru & Staf</p>
-              <h2 className="mt-2 text-3xl font-bold text-slate-800">
+              <p className="text-sm font-semibold text-slate-700">
+                Total Guru & Staf
+              </p>
+              <h2 className="mt-2 text-3xl font-bold text-slate-900">
                 {daftarGuru.length}
               </h2>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-2xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-2xl">
               👩‍🏫
             </div>
           </div>
-          <p className="mt-3 text-xs text-slate-400">Seluruh data tenaga pendidik</p>
+          <p className="mt-3 text-xs font-medium text-slate-600">
+            Seluruh data tenaga pendidik
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Guru Aktif</p>
-              <h2 className="mt-2 text-3xl font-bold text-emerald-600">
+              <p className="text-sm font-semibold text-slate-700">
+                Guru Aktif
+              </p>
+              <h2 className="mt-2 text-3xl font-bold text-emerald-800">
                 {jumlahAktif}
               </h2>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-2xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-2xl text-green-900">
               ✓
             </div>
           </div>
-          <p className="mt-3 text-xs text-slate-400">Tenaga pendidik berstatus aktif</p>
+          <p className="mt-3 text-xs font-medium text-slate-600">
+            Tenaga pendidik berstatus aktif
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Jenis Jabatan</p>
-              <h2 className="mt-2 text-3xl font-bold text-blue-600">
+              <p className="text-sm font-semibold text-slate-700">
+                Jenis Jabatan
+              </p>
+              <h2 className="mt-2 text-3xl font-bold text-blue-800">
                 {jumlahJabatan}
               </h2>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-2xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-2xl">
               💼
             </div>
           </div>
-          <p className="mt-3 text-xs text-slate-400">Jabatan yang tercatat dalam sistem</p>
+          <p className="mt-3 text-xs font-medium text-slate-600">
+            Jabatan yang tercatat dalam sistem
+          </p>
         </div>
       </div>
 
+      {/* Pesan Error */}
       {pesanError && (
         <div
           role="alert"
-          className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+          className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm font-medium text-rose-900"
         >
           {pesanError}
         </div>
       )}
 
       {/* Tabel Data */}
-      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+        <div className="flex flex-col gap-4 border-b border-slate-200 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="font-bold text-slate-800">Daftar Guru & Staf</h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <h2 className="font-bold text-slate-900">
+              Daftar Guru & Staf
+            </h2>
+            <p className="mt-1 text-xs font-medium text-slate-700">
               Informasi tenaga pendidik yang terdaftar pada sistem.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600">
                 ⌕
               </span>
               <input
@@ -342,14 +356,14 @@ export default function GuruPage() {
                 value={cari}
                 onChange={(e) => setCari(e.target.value)}
                 placeholder="Cari nama atau NIP..."
-                className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 sm:w-64"
+                className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 sm:w-64"
               />
             </div>
 
             <select
               value={filterJabatan}
               onChange={(e) => setFilterJabatan(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 outline-none focus:border-emerald-500"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
             >
               <option value="">Semua Jabatan</option>
               <option value="Kepala Sekolah">Kepala Sekolah</option>
@@ -361,24 +375,24 @@ export default function GuruPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[850px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <thead className="bg-slate-100 text-xs uppercase tracking-wider text-slate-800">
               <tr>
-                <th className="px-5 py-4 font-semibold">No.</th>
-                <th className="px-5 py-4 font-semibold">NIP / ID</th>
-                <th className="px-5 py-4 font-semibold">Nama Guru</th>
-                <th className="px-5 py-4 font-semibold">Tempat, Tanggal Lahir</th>
-                <th className="px-5 py-4 font-semibold">Jabatan</th>
-                <th className="px-5 py-4 font-semibold">Status</th>
-                <th className="px-5 py-4 text-center font-semibold">Aksi</th>
+                <th className="px-5 py-4 font-bold">No.</th>
+                <th className="px-5 py-4 font-bold">NIP / ID</th>
+                <th className="px-5 py-4 font-bold">Nama Guru</th>
+                <th className="px-5 py-4 font-bold">Tempat, Tanggal Lahir</th>
+                <th className="px-5 py-4 font-bold">Jabatan</th>
+                <th className="px-5 py-4 font-bold">Status</th>
+                <th className="px-5 py-4 text-center font-bold">Aksi</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100 text-slate-600">
+            <tbody className="divide-y divide-slate-200 text-slate-800">
               {memuat ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-slate-400">
+                  <td colSpan={7} className="px-5 py-12 text-center font-medium text-slate-700">
                     <div className="flex flex-col items-center gap-2">
-                      <span className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                      <span className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
                       Memuat data guru...
                     </div>
                   </td>
@@ -387,57 +401,65 @@ export default function GuruPage() {
                 guruDisaring.map((guru, index) => (
                   <tr
                     key={guru.id}
-                    className="transition-colors hover:bg-emerald-50/40"
+                    className="transition-colors hover:bg-emerald-50"
                   >
-                    <td className="px-5 py-4 text-slate-400">{index + 1}</td>
                     <td className="px-5 py-4 font-medium text-slate-700">
+                      {index + 1}
+                    </td>
+
+                    <td className="px-5 py-4 font-semibold text-slate-800">
                       {guru.nip}
                     </td>
+
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-900">
                           {guru.nama.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-semibold text-slate-800">
+                        <span className="font-bold text-slate-900">
                           {guru.nama}
                         </span>
                       </div>
                     </td>
+
                     <td className="px-5 py-4">
-                      <div className="font-medium text-slate-700">
+                      <div className="font-semibold text-slate-800">
                         {guru.tempat_lahir || "-"}
                       </div>
-                      <div className="mt-1 text-xs text-slate-400">
+                      <div className="mt-1 text-xs font-medium text-slate-600">
                         {formatTanggal(guru.tanggal_lahir)}
                       </div>
                     </td>
+
                     <td className="px-5 py-4">
-                      <span className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                      <span className="rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-900">
                         {guru.jabatan}
                       </span>
                     </td>
+
                     <td className="px-5 py-4">
                       <span
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                        className={`rounded-full px-3 py-1.5 text-xs font-bold ${
                           guru.status.toLowerCase() === "aktif"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-100 text-slate-600"
+                            ? "bg-emerald-100 text-emerald-900"
+                            : "bg-slate-200 text-slate-800"
                         }`}
                       >
                         {guru.status}
                       </span>
                     </td>
+
                     <td className="px-5 py-4">
                       <div className="flex justify-center gap-2">
                         <button
                           onClick={() => handleBukaEdit(guru)}
-                          className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
+                          className="rounded-lg bg-amber-100 px-3 py-2 text-xs font-bold text-amber-900 transition hover:bg-amber-200"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleHapus(guru.id, guru.nama)}
-                          className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-100"
+                          className="rounded-lg bg-rose-100 px-3 py-2 text-xs font-bold text-rose-900 transition hover:bg-rose-200"
                         >
                           Hapus
                         </button>
@@ -449,10 +471,10 @@ export default function GuruPage() {
                 <tr>
                   <td colSpan={7} className="px-5 py-12 text-center">
                     <div className="text-3xl">📋</div>
-                    <p className="mt-2 font-semibold text-slate-600">
+                    <p className="mt-2 font-bold text-slate-800">
                       Data guru tidak ditemukan
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs font-medium text-slate-600">
                       Coba ubah kata kunci pencarian atau filter jabatan.
                     </p>
                   </td>
@@ -462,7 +484,7 @@ export default function GuruPage() {
           </table>
         </div>
 
-        <div className="border-t border-slate-100 px-5 py-4 text-xs text-slate-400">
+        <div className="border-t border-slate-200 px-5 py-4 text-xs font-medium text-slate-700">
           Menampilkan {guruDisaring.length} dari {daftarGuru.length} data guru.
         </div>
       </div>
@@ -470,26 +492,27 @@ export default function GuruPage() {
       {/* Modal Tambah / Edit */}
       {bukaModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm"
           onClick={() => setBukaModal(false)}
         >
           <div
-            className="my-auto w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className="my-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-6 py-5">
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-6 py-5">
               <div>
-                <h2 className="text-xl font-bold text-slate-800">
+                <h2 className="text-xl font-bold text-slate-900">
                   {isEdit ? "Edit Data Guru" : "Tambah Guru Baru"}
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm font-medium text-slate-700">
                   Lengkapi informasi identitas tenaga pendidik.
                 </p>
               </div>
+
               <button
                 type="button"
                 onClick={() => setBukaModal(false)}
-                className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                className="rounded-lg p-2 font-bold text-slate-700 transition hover:bg-slate-200 hover:text-slate-950"
                 aria-label="Tutup modal"
               >
                 ✕
@@ -498,13 +521,14 @@ export default function GuruPage() {
 
             <form onSubmit={handleSimpan} className="space-y-5 p-6">
               <div>
-                <h3 className="mb-3 text-sm font-bold text-emerald-700">
+                <h3 className="mb-3 text-sm font-bold text-emerald-900">
                   Informasi Identitas
                 </h3>
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="text-sm font-semibold text-slate-700">
-                      NIP / ID Pegawai <span className="text-rose-500">*</span>
+                    <label className="text-sm font-bold text-slate-800">
+                      NIP / ID Pegawai <span className="text-rose-700">*</span>
                     </label>
                     <input
                       type="text"
@@ -517,8 +541,8 @@ export default function GuruPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-slate-700">
-                      Nama Lengkap <span className="text-rose-500">*</span>
+                    <label className="text-sm font-bold text-slate-800">
+                      Nama Lengkap <span className="text-rose-700">*</span>
                     </label>
                     <input
                       type="text"
@@ -531,7 +555,7 @@ export default function GuruPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-slate-700">
+                    <label className="text-sm font-bold text-slate-800">
                       Tempat Lahir
                     </label>
                     <input
@@ -544,7 +568,7 @@ export default function GuruPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-slate-700">
+                    <label className="text-sm font-bold text-slate-800">
                       Tanggal Lahir
                     </label>
                     <input
@@ -557,13 +581,14 @@ export default function GuruPage() {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 pt-5">
-                <h3 className="mb-3 text-sm font-bold text-emerald-700">
+              <div className="border-t border-slate-200 pt-5">
+                <h3 className="mb-3 text-sm font-bold text-emerald-900">
                   Informasi Pekerjaan
                 </h3>
+
                 <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Jabatan / Tugas <span className="text-rose-500">*</span>
+                  <label className="text-sm font-bold text-slate-800">
+                    Jabatan / Tugas <span className="text-rose-700">*</span>
                   </label>
                   <input
                     type="text"
@@ -576,18 +601,19 @@ export default function GuruPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setBukaModal(false)}
-                  className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                  className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100"
                 >
                   Batal
                 </button>
+
                 <button
                   type="submit"
                   disabled={menyimpan}
-                  className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {menyimpan
                     ? "Menyimpan..."

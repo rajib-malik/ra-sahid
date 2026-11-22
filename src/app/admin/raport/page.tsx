@@ -1,7 +1,17 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, X, FileText, Printer, GraduationCap, CalendarDays, BookOpen, UserRound, Award } from "lucide-react";
+import {
+  Search,
+  X,
+  FileText,
+  Printer,
+  GraduationCap,
+  CalendarDays,
+  BookOpen,
+  Award,
+} from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 
 type Student = {
@@ -31,19 +41,24 @@ function text(value: unknown, fallback = "") {
 }
 
 function isValidIdentifier(value: unknown) {
-  return (typeof value === "string" && value.trim().length > 0) ||
-    (typeof value === "number" && Number.isFinite(value));
+  return (
+    (typeof value === "string" && value.trim().length > 0) ||
+    (typeof value === "number" && Number.isFinite(value))
+  );
 }
 
 function isStudent(value: unknown): value is Record<string, unknown> {
-  return isRecord(value) &&
+  return (
+    isRecord(value) &&
     isValidIdentifier(value.id) &&
     isValidIdentifier(value.nis) &&
-    isValidIdentifier(value.nama);
+    isValidIdentifier(value.nama)
+  );
 }
 
 function normalizeStudent(value: unknown): Student | null {
   if (!isStudent(value)) return null;
+
   return {
     id: text(value.id),
     nis: text(value.nis),
@@ -58,28 +73,44 @@ function isRaportEntry(value: unknown): value is Record<string, unknown> {
 }
 
 function numericValue(value: unknown, fallback: number) {
-  const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function normalizeRaportEntry(value: unknown): RaportEntry | null {
   if (!isRaportEntry(value)) return null;
+
   return {
     aspek: text(value.aspek, "Mata pelajaran"),
     nilaiAngka: numericValue(value.nilaiAngka, 0),
     predikat: text(value.predikat, "-"),
     catatan: text(value.catatan),
-    jumlahPenilaian: Math.max(0, Math.trunc(numericValue(value.jumlahPenilaian, 0))),
+    jumlahPenilaian: Math.max(
+      0,
+      Math.trunc(numericValue(value.jumlahPenilaian, 0))
+    ),
   };
 }
 
 function getErrorMessage(value: unknown, fallback: string) {
-  return isRecord(value) && typeof value.error === "string" ? value.error : fallback;
+  return isRecord(value) && typeof value.error === "string"
+    ? value.error
+    : fallback;
 }
 
 function getTahunAjaranSaatIni() {
   const sekarang = new Date();
-  const tahunMulai = sekarang.getMonth() >= 6 ? sekarang.getFullYear() : sekarang.getFullYear() - 1;
+  const tahunMulai =
+    sekarang.getMonth() >= 6
+      ? sekarang.getFullYear()
+      : sekarang.getFullYear() - 1;
+
   return `${tahunMulai}/${tahunMulai + 1}`;
 }
 
@@ -97,23 +128,46 @@ export default function RaportResmiPage() {
   useEffect(() => {
     async function muatSiswa() {
       try {
-        const response = await apiFetch("/api/siswa", { cache: "no-store" });
+        const response = await apiFetch("/api/siswa", {
+          cache: "no-store",
+        });
+
         const result: unknown = await response.json();
-        if (!response.ok || !Array.isArray(result) || !result.every(isStudent)) {
-          throw new Error(getErrorMessage(result, "Gagal memuat daftar siswa."));
+
+        if (
+          !response.ok ||
+          !Array.isArray(result) ||
+          !result.every(isStudent)
+        ) {
+          throw new Error(
+            getErrorMessage(result, "Gagal memuat daftar siswa.")
+          );
         }
-        const normalizedStudents = result.map(normalizeStudent).filter((student): student is Student => student !== null);
+
+        const normalizedStudents = result
+          .map(normalizeStudent)
+          .filter((student): student is Student => student !== null);
+
         setSiswa(normalizedStudents);
-        setNis((current) => normalizedStudents.some((student) => student.nis === current)
-          ? current
-          : normalizedStudents[0]?.nis ?? "");
+
+        setNis((current) =>
+          normalizedStudents.some((student) => student.nis === current)
+            ? current
+            : normalizedStudents[0]?.nis ?? ""
+        );
       } catch (error) {
         console.error("Gagal memuat daftar siswa untuk raport:", error);
-        setPesanError(error instanceof Error ? error.message : "Gagal memuat daftar siswa.");
+
+        setPesanError(
+          error instanceof Error
+            ? error.message
+            : "Gagal memuat daftar siswa."
+        );
       } finally {
         setMemuatSiswa(false);
       }
     }
+
     void Promise.resolve().then(muatSiswa);
   }, []);
 
@@ -122,14 +176,21 @@ export default function RaportResmiPage() {
 
     async function muatRaport() {
       const nisValid = nis.trim();
-      const tahunAjaranValid = /^(\d{4})\/(\d{4})$/.exec(tahunAjaran.trim());
-      const semesterValid = semester === "Semester 1 (Ganjil)" || semester === "Semester 2 (Genap)";
+      const tahunAjaranValid = /^(\d{4})\/(\d{4})$/.exec(
+        tahunAjaran.trim()
+      );
+
+      const semesterValid =
+        semester === "Semester 1 (Ganjil)" ||
+        semester === "Semester 2 (Genap)";
+
       if (
         !nisValid ||
         nisValid.length > 100 ||
         !semesterValid ||
         !tahunAjaranValid ||
-        Number(tahunAjaranValid[2]) !== Number(tahunAjaranValid[1]) + 1
+        Number(tahunAjaranValid[2]) !==
+          Number(tahunAjaranValid[1]) + 1
       ) {
         if (aktif) {
           setRaport([]);
@@ -139,59 +200,106 @@ export default function RaportResmiPage() {
       }
 
       setMemuatRaport(true);
+
       try {
         const query = new URLSearchParams({
           nis: nisValid,
           semester,
           tahunAjaran: tahunAjaran.trim(),
         });
-        const response = await apiFetch(`/api/raport?${query.toString()}`, { cache: "no-store" });
+
+        const response = await apiFetch(
+          `/api/raport?${query.toString()}`,
+          { cache: "no-store" }
+        );
+
         const result: unknown = await response.json();
+
         if (!response.ok || !Array.isArray(result)) {
-          throw new Error(getErrorMessage(result, "Gagal memuat rekap nilai raport."));
+          throw new Error(
+            getErrorMessage(
+              result,
+              "Gagal memuat rekap nilai raport."
+            )
+          );
         }
+
         if (!aktif) return;
-        setRaport(result.map(normalizeRaportEntry).filter((entry): entry is RaportEntry => entry !== null));
+
+        setRaport(
+          result
+            .map(normalizeRaportEntry)
+            .filter((entry): entry is RaportEntry => entry !== null)
+        );
+
         setPesanError("");
       } catch (error) {
         if (!aktif) return;
+
         console.error("Gagal memuat rekap nilai raport:", error);
-        setPesanError(error instanceof Error ? error.message : "Gagal memuat rekap nilai raport.");
+
+        setPesanError(
+          error instanceof Error
+            ? error.message
+            : "Gagal memuat rekap nilai raport."
+        );
       } finally {
         if (aktif) setMemuatRaport(false);
       }
     }
+
     void Promise.resolve().then(muatRaport);
+
     return () => {
       aktif = false;
     };
   }, [nis, semester, tahunAjaran]);
 
   const siswaTerpilih = siswa.find((item) => item.nis === nis);
+
   const siswaDisaring = siswa.filter((student) => {
     const kataKunci = cariSiswa.trim().toLocaleLowerCase("id");
-    return !kataKunci ||
+
+    return (
+      !kataKunci ||
       student.nama.toLocaleLowerCase("id").includes(kataKunci) ||
       student.nis.toLocaleLowerCase("id").includes(kataKunci) ||
-      student.kelas.toLocaleLowerCase("id").includes(kataKunci);
+      student.kelas.toLocaleLowerCase("id").includes(kataKunci)
+    );
   });
+
   const rekapRaport = nis ? raport : [];
 
+  const inputClass =
+    "h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-slate-900">
+      {/* Header Halaman */}
       <div className="non-printable relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50 p-5 shadow-sm sm:p-6">
         <div className="absolute -right-10 -top-12 h-44 w-44 rounded-full bg-emerald-100/70 blur-3xl" />
+
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-lg shadow-emerald-900/15">
               <GraduationCap className="h-7 w-7" />
             </div>
+
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Akademik • Laporan Hasil Belajar</p>
-              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">E-Raport Resmi Madrasah</h1>
-              <p className="mt-1 max-w-xl text-sm text-slate-500">Lihat rekap perkembangan dan hasil penilaian harian peserta didik.</p>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
+                Akademik • Laporan Hasil Belajar
+              </p>
+
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">
+                E-Raport Resmi Madrasah
+              </h1>
+
+              <p className="mt-1 max-w-xl text-sm text-slate-600">
+                Lihat rekap perkembangan dan hasil penilaian harian peserta didik.
+              </p>
             </div>
           </div>
+
           <button
             type="button"
             onClick={() => window.print()}
@@ -203,105 +311,233 @@ export default function RaportResmiPage() {
         </div>
       </div>
 
-      {pesanError && <p role="alert" className="non-printable rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{pesanError}</p>}
+      {/* Pesan Error */}
+      {pesanError && (
+        <p
+          role="alert"
+          className="non-printable rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-800"
+        >
+          {pesanError}
+        </p>
+      )}
 
+      {/* Pengaturan Raport */}
       <section className="non-printable rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-4">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-200 pb-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
             <FileText className="h-5 w-5" />
           </div>
+
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Pengaturan Raport</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Pilih peserta didik dan periode raport yang ingin ditampilkan.</p>
+            <h2 className="text-sm font-bold text-slate-900">
+              Pengaturan Raport
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-600">
+              Pilih peserta didik dan periode raport yang ingin ditampilkan.
+            </p>
           </div>
         </div>
+
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div>
-          <label htmlFor="cari-siswa-raport" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"><Search className="h-3.5 w-3.5 text-slate-400" /> Cari Siswa</label>
-          <div className="relative mt-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              id="cari-siswa-raport"
-              type="search"
-              value={cariSiswa}
-              onChange={(event) => setCariSiswa(event.target.value)}
-              placeholder="Cari nama, NIS, atau kelas..."
-              className="h-11 w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50"
-            />
-            {cariSiswa && (
-              <button
-                type="button"
-                onClick={() => setCariSiswa("")}
-                aria-label="Hapus pencarian siswa"
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          {/* Pilih Siswa */}
+          <div>
+            <label
+              htmlFor="cari-siswa-raport"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-800"
+            >
+              <Search className="h-3.5 w-3.5 text-slate-600" />
+              Cari Siswa
+            </label>
+
+            <div className="relative mt-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+
+              <input
+                id="cari-siswa-raport"
+                type="search"
+                value={cariSiswa}
+                onChange={(event) => setCariSiswa(event.target.value)}
+                placeholder="Cari nama, NIS, atau kelas..."
+                className="h-11 w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50"
+              />
+
+              {cariSiswa && (
+                <button
+                  type="button"
+                  onClick={() => setCariSiswa("")}
+                  aria-label="Hapus pencarian siswa"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            <p className="mt-1 text-xs text-slate-600">
+              {siswaDisaring.length} dari {siswa.length} siswa ditemukan.
+            </p>
+
+            <label
+              htmlFor="siswa-raport"
+              className="mt-3 block text-xs font-semibold text-slate-800"
+            >
+              Pilih Siswa
+            </label>
+
+            <select
+              id="siswa-raport"
+              value={nis}
+              onChange={(event) => setNis(event.target.value)}
+              disabled={memuatSiswa || siswa.length === 0}
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+            >
+              <option value="">
+                {memuatSiswa ? "Memuat siswa..." : "Pilih siswa"}
+              </option>
+
+              {siswaDisaring.map((student) => (
+                <option key={student.nis} value={student.nis}>
+                  {student.nis} — {student.nama} ({student.kelas})
+                </option>
+              ))}
+            </select>
+
+            {!memuatSiswa && cariSiswa && siswaDisaring.length === 0 && (
+              <p className="mt-2 text-xs font-medium text-rose-700">
+                Siswa tidak ditemukan. Coba kata kunci lain.
+              </p>
             )}
           </div>
-          <p className="mt-1 text-xs text-slate-500">
-            {siswaDisaring.length} dari {siswa.length} siswa ditemukan.
-          </p>
-          <label htmlFor="siswa-raport" className="mt-3 block text-xs font-semibold text-slate-700">Pilih Siswa</label>
-          <select
-            id="siswa-raport"
-            value={nis}
-            onChange={(event) => setNis(event.target.value)}
-            disabled={memuatSiswa || siswa.length === 0}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm"
-          >
-            <option value="">{memuatSiswa ? "Memuat siswa..." : "Pilih siswa"}</option>
-            {siswaDisaring.map((student) => (
-              <option key={student.nis} value={student.nis}>
-                {student.nis} — {student.nama} ({student.kelas})
-              </option>
-            ))}
-          </select>
-          {!memuatSiswa && cariSiswa && siswaDisaring.length === 0 && (
-            <p className="mt-2 text-xs text-rose-600">Siswa tidak ditemukan. Coba kata kunci lain.</p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="semester-raport" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"><BookOpen className="h-3.5 w-3.5 text-slate-400" /> Periode Semester</label>
-          <select id="semester-raport" value={semester} onChange={(event) => setSemester(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50">
-            <option>Semester 1 (Ganjil)</option>
-            <option>Semester 2 (Genap)</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="tahun-ajaran-raport" className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"><CalendarDays className="h-3.5 w-3.5 text-slate-400" /> Tahun Ajaran (YYYY/YYYY)</label>
-          <input id="tahun-ajaran-raport" value={tahunAjaran} onChange={(event) => setTahunAjaran(event.target.value)} pattern="\d{4}/\d{4}" maxLength={9} placeholder="2026/2027" className="mt-1.5 h-11 w-full rounded-xl border border-slate-300 px-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50" />
-        </div>
+
+          {/* Semester */}
+          <div>
+            <label
+              htmlFor="semester-raport"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-800"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-slate-600" />
+              Periode Semester
+            </label>
+
+            <select
+              id="semester-raport"
+              value={semester}
+              onChange={(event) => setSemester(event.target.value)}
+              className={`mt-1.5 ${inputClass}`}
+            >
+              <option>Semester 1 (Ganjil)</option>
+              <option>Semester 2 (Genap)</option>
+            </select>
+          </div>
+
+          {/* Tahun Ajaran */}
+          <div>
+            <label
+              htmlFor="tahun-ajaran-raport"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-800"
+            >
+              <CalendarDays className="h-3.5 w-3.5 text-slate-600" />
+              Tahun Ajaran (YYYY/YYYY)
+            </label>
+
+            <input
+              id="tahun-ajaran-raport"
+              value={tahunAjaran}
+              onChange={(event) => setTahunAjaran(event.target.value)}
+              pattern="\d{4}/\d{4}"
+              maxLength={9}
+              placeholder="2026/2027"
+              className={`mt-1.5 ${inputClass}`}
+            />
+          </div>
         </div>
       </section>
 
-      <div id="area-raport" className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm sm:p-8">
+      {/* Area Raport */}
+      <div
+        id="area-raport"
+        className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm sm:p-8"
+      >
+        {/* Kop Raport */}
         <div className="relative overflow-hidden rounded-xl border-b-4 border-double border-emerald-800 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 px-4 py-6 text-center sm:px-8">
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-100 bg-white text-emerald-800 shadow-sm">
             <GraduationCap className="h-8 w-8" />
           </div>
-          <p className="text-[10px] font-bold tracking-[0.2em] text-emerald-800 sm:text-xs">KEMENTERIAN AGAMA REPUBLIK INDONESIA</p>
-          <h2 className="mt-2 text-xl font-extrabold tracking-wide text-slate-900 sm:text-2xl">RAUDHATUL ATHFAL (RA) SAHID</h2>
-          <p className="mt-1 text-xs font-medium text-slate-600 sm:text-sm">Laporan Penilaian Perkembangan Anak Didik</p>
+
+          <p className="text-[10px] font-bold tracking-[0.2em] text-emerald-900 sm:text-xs">
+            KEMENTERIAN AGAMA REPUBLIK INDONESIA
+          </p>
+
+          <h2 className="mt-2 text-xl font-extrabold tracking-wide text-slate-900 sm:text-2xl">
+            RAUDHATUL ATHFAL (RA) SAHID
+          </h2>
+
+          <p className="mt-1 text-xs font-medium text-slate-700 sm:text-sm">
+            Laporan Penilaian Perkembangan Anak Didik
+          </p>
+
           <div className="mx-auto mt-4 h-1 w-20 rounded-full bg-emerald-700" />
         </div>
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 text-sm sm:grid-cols-2 sm:p-5">
-          <p className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Anak</span><span className="font-bold text-slate-900">{siswaTerpilih?.nama ?? "-"}</span></p>
-          <p className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kelompok</span><span className="font-bold text-slate-900">{siswaTerpilih?.kelas ?? "-"}</span></p>
-          <p className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">NIS</span><span className="font-bold text-slate-900">{siswaTerpilih?.nis ?? "-"}</span></p>
-          <p className="flex flex-col gap-1"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Semester / Tahun Ajaran</span><span className="font-bold text-slate-900">{semester} ({tahunAjaran})</span></p>
+
+        {/* Identitas Siswa */}
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2 sm:p-5">
+          <p className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Nama Anak
+            </span>
+            <span className="font-bold text-slate-900">
+              {siswaTerpilih?.nama ?? "-"}
+            </span>
+          </p>
+
+          <p className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Kelompok
+            </span>
+            <span className="font-bold text-slate-900">
+              {siswaTerpilih?.kelas ?? "-"}
+            </span>
+          </p>
+
+          <p className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+              NIS
+            </span>
+            <span className="font-bold text-slate-900">
+              {siswaTerpilih?.nis ?? "-"}
+            </span>
+          </p>
+
+          <p className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Semester / Tahun Ajaran
+            </span>
+            <span className="font-bold text-slate-900">
+              {semester} ({tahunAjaran})
+            </span>
+          </p>
         </div>
+
+        {/* Rekapitulasi Nilai */}
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><Award className="h-4 w-4" /></div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+              <Award className="h-4 w-4" />
+            </div>
+
             <div>
-              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-800">Rekapitulasi Nilai Harian</h3>
-              <p className="mt-0.5 text-xs text-slate-500">Ringkasan penilaian berdasarkan mata pelajaran atau aspek pembelajaran.</p>
+              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-900">
+                Rekapitulasi Nilai Harian
+              </h3>
+              <p className="mt-0.5 text-xs text-slate-600">
+                Ringkasan penilaian berdasarkan mata pelajaran atau aspek pembelajaran.
+              </p>
             </div>
           </div>
+
           <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-100 font-bold">
+            <table className="w-full text-left text-sm text-slate-800">
+              <thead className="bg-slate-100 font-bold text-slate-900">
                 <tr>
                   <th className="px-4 py-3">Mata Pelajaran</th>
                   <th className="px-4 py-3">Rata-rata</th>
@@ -310,25 +546,66 @@ export default function RaportResmiPage() {
                   <th className="px-4 py-3">Catatan Nilai Harian</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-slate-200">
                 {!nis ? (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-500">
-                    {memuatSiswa
-                      ? "Memuat daftar siswa..."
-                      : "Silakan pilih siswa terlebih dahulu untuk melihat rekap raport."}
-                  </td></tr>
-                ) : memuatRaport ? (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Menghitung rekap nilai...</td></tr>
-                ) : rekapRaport.length ? rekapRaport.map((entry) => (
-                  <tr key={entry.aspek} className="align-top">
-                    <td className="px-4 py-3 font-semibold">{entry.aspek}</td>
-                    <td className="px-4 py-3">{entry.nilaiAngka.toLocaleString("id-ID", { maximumFractionDigits: 2 })}</td>
-                    <td className="px-4 py-3">{entry.predikat}</td>
-                    <td className="px-4 py-3">{entry.jumlahPenilaian}</td>
-                    <td className="px-4 py-3 leading-relaxed">{entry.catatan || "-"}</td>
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-6 text-center text-slate-700"
+                    >
+                      {memuatSiswa
+                        ? "Memuat daftar siswa..."
+                        : "Silakan pilih siswa terlebih dahulu untuk melihat rekap raport."}
+                    </td>
                   </tr>
-                )) : (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Belum ada nilai harian pada semester ini.</td></tr>
+                ) : memuatRaport ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-6 text-center text-slate-700"
+                    >
+                      Menghitung rekap nilai...
+                    </td>
+                  </tr>
+                ) : rekapRaport.length ? (
+                  rekapRaport.map((entry) => (
+                    <tr
+                      key={entry.aspek}
+                      className="align-top text-slate-800 transition hover:bg-slate-50"
+                    >
+                      <td className="px-4 py-3 font-semibold text-slate-900">
+                        {entry.aspek}
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-800">
+                        {entry.nilaiAngka.toLocaleString("id-ID", {
+                          maximumFractionDigits: 2,
+                        })}
+                      </td>
+
+                      <td className="px-4 py-3 font-semibold text-slate-800">
+                        {entry.predikat}
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-800">
+                        {entry.jumlahPenilaian}
+                      </td>
+
+                      <td className="px-4 py-3 leading-relaxed text-slate-800">
+                        {entry.catatan || "-"}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-6 text-center text-slate-700"
+                    >
+                      Belum ada nilai harian pada semester ini.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -336,12 +613,68 @@ export default function RaportResmiPage() {
         </div>
       </div>
 
+      {/* Pengaturan Cetak */}
       <style jsx global>{`
         @media print {
-          body * { visibility: hidden; }
-          #area-raport, #area-raport * { visibility: visible; }
-          #area-raport { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; }
-          aside, header, nav, footer, .non-printable { display: none !important; }
+          @page {
+            size: A4 portrait;
+            margin: 12mm;
+          }
+
+          html,
+          body {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          body * {
+            visibility: hidden;
+          }
+
+          #area-raport,
+          #area-raport * {
+            visibility: visible;
+          }
+
+          #area-raport {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+          }
+
+          #area-raport h2,
+          #area-raport h3,
+          #area-raport p,
+          #area-raport span,
+          #area-raport th,
+          #area-raport td {
+            color: #0f172a !important;
+          }
+
+          #area-raport table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+
+          #area-raport th,
+          #area-raport td {
+            border: 1px solid #cbd5e1 !important;
+          }
+
+          aside,
+          header,
+          nav,
+          footer,
+          .non-printable {
+            display: none !important;
+          }
         }
       `}</style>
     </div>
