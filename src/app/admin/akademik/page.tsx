@@ -20,7 +20,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function text(value: unknown, fallback = "") {
   if (typeof value === "string") return value;
-  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
   return fallback;
 }
 
@@ -126,21 +128,21 @@ export default function AkademikPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white text-slate-900">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Data Akademik Siswa
           </h1>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-700">
             Daftar siswa dan kelompok belajar tersinkron dengan data induk.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-emerald-700">
+        <div className="flex items-center gap-2 text-sm text-emerald-800">
           <Users className="h-5 w-5" />
           <span className="font-semibold">
             {loading ? "Memuat..." : `${students.length} Total Siswa`}
@@ -148,15 +150,14 @@ export default function AkademikPage() {
         </div>
       </div>
 
-      {/* Search Bar dan Filter */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      {/* PENCARIAN DAN FILTER */}
+      <div className="rounded-xl border border-slate-300 bg-white p-4 shadow-sm">
 
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
-          {/* Search Bar */}
+          {/* SEARCH BAR */}
           <div className="relative w-full md:max-w-md">
-
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-600" />
 
             <input
               type="text"
@@ -164,7 +165,7 @@ export default function AkademikPage() {
               onChange={(event) => setCariNama(event.target.value)}
               placeholder="Cari nama atau NIS siswa..."
               aria-label="Cari nama atau NIS siswa"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+              className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
             />
 
             {cariNama && (
@@ -172,20 +173,20 @@ export default function AkademikPage() {
                 type="button"
                 onClick={() => setCariNama("")}
                 aria-label="Hapus pencarian"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-rose-500"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-700 transition hover:text-rose-700"
               >
                 <X className="h-5 w-5" />
               </button>
             )}
           </div>
 
-          {/* Filter Kelas */}
+          {/* FILTER KELAS */}
           <div className="w-full md:w-56">
             <select
               aria-label="Filter kelas"
               value={kelas}
               onChange={(event) => setKelas(event.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
             >
               <option value="Semua">Semua Kelas</option>
 
@@ -199,11 +200,11 @@ export default function AkademikPage() {
 
         </div>
 
-        {/* Informasi hasil pencarian */}
+        {/* INFORMASI HASIL PENCARIAN */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-700">
             Menampilkan{" "}
-            <span className="font-semibold text-emerald-700">
+            <span className="font-bold text-emerald-800">
               {loading ? 0 : filteredStudents.length}
             </span>{" "}
             dari {students.length} siswa
@@ -216,7 +217,7 @@ export default function AkademikPage() {
                 setCariNama("");
                 setKelas("Semua");
               }}
-              className="text-xs font-semibold text-rose-600 transition hover:text-rose-700"
+              className="text-xs font-semibold text-rose-700 transition hover:text-rose-900"
             >
               Reset Filter
             </button>
@@ -224,51 +225,54 @@ export default function AkademikPage() {
         </div>
       </div>
 
-      {/* Pesan Error */}
+      {/* PESAN ERROR */}
       {errorMessage && (
         <div
           role="alert"
-          className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"
+          className="rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm font-medium text-rose-900"
         >
           {errorMessage}
         </div>
       )}
 
-      {/* Tabel Data Siswa */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      {/* TABEL DATA SISWA */}
+      <div className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm text-slate-900">
 
-            <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
+            {/* HEADER TABEL */}
+            <thead className="border-b border-slate-300 bg-slate-100 text-slate-900">
               <tr>
-                <th className="px-6 py-4 font-semibold">NIS</th>
-                <th className="px-6 py-4 font-semibold">Nama Siswa</th>
-                <th className="px-6 py-4 font-semibold">Kelas</th>
-                <th className="px-6 py-4 font-semibold">Jenis Kelamin</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
+                <th className="px-6 py-4 font-bold">NIS</th>
+                <th className="px-6 py-4 font-bold">Nama Siswa</th>
+                <th className="px-6 py-4 font-bold">Kelas</th>
+                <th className="px-6 py-4 font-bold">Jenis Kelamin</th>
+                <th className="px-6 py-4 font-bold">Status</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-200 text-slate-700">
+            {/* ISI TABEL */}
+            <tbody className="divide-y divide-slate-200 text-slate-800">
 
               {loading ? (
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-6 py-10 text-center text-slate-400"
+                    className="px-6 py-10 text-center font-medium text-slate-700"
                   >
                     Memuat data siswa...
                   </td>
                 </tr>
 
               ) : filteredStudents.length > 0 ? (
+
                 filteredStudents.map((student) => (
                   <tr
                     key={student.id}
-                    className="transition-colors hover:bg-emerald-50/40"
+                    className="transition-colors hover:bg-slate-50"
                   >
-                    <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-600">
+                    <td className="whitespace-nowrap px-6 py-4 font-semibold text-slate-800">
                       {student.nis}
                     </td>
 
@@ -279,21 +283,21 @@ export default function AkademikPage() {
                     </td>
 
                     <td className="whitespace-nowrap px-6 py-4">
-                      <span className="rounded-lg bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                      <span className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-900">
                         {student.kelas || "-"}
                       </span>
                     </td>
 
-                    <td className="whitespace-nowrap px-6 py-4">
+                    <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-800">
                       {student.jk || "-"}
                     </td>
 
                     <td className="whitespace-nowrap px-6 py-4">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${
                           student.status.toLowerCase() === "aktif"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-100 text-slate-600"
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                            : "border-slate-300 bg-slate-100 text-slate-800"
                         }`}
                       >
                         {student.status}
@@ -303,19 +307,20 @@ export default function AkademikPage() {
                 ))
 
               ) : (
+
                 <tr>
                   <td
                     colSpan={5}
                     className="px-6 py-12 text-center"
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <Search className="h-8 w-8 text-slate-300" />
+                      <Search className="h-8 w-8 text-slate-500" />
 
-                      <p className="font-semibold text-slate-600">
+                      <p className="font-bold text-slate-900">
                         Siswa tidak ditemukan
                       </p>
 
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-700">
                         Coba periksa kembali nama, NIS, atau filter kelas.
                       </p>
 
@@ -325,7 +330,7 @@ export default function AkademikPage() {
                           setCariNama("");
                           setKelas("Semua");
                         }}
-                        className="mt-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700"
+                        className="mt-2 text-sm font-bold text-emerald-800 hover:text-emerald-950"
                       >
                         Tampilkan Semua Siswa
                       </button>
